@@ -12,6 +12,7 @@ const signToken = user => {
   }, JWT_SECRET);
 }
 
+
 module.exports = {
   register: async (req, res, next) => {
     const { email, password } = req.value.body;
