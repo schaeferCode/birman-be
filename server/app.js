@@ -3,7 +3,6 @@ const morgan = require('morgan');
 const bodyParser = require('body-parser');
 const mongoose = require('mongoose');
 
-
 // const { GoogleAdsApi, enums } = require('google-ads-api');
 // const bizSdk = require('facebook-nodejs-business-sdk');
 // var cors = require('cors');
