@@ -9,8 +9,10 @@ const mongoose = require('mongoose');
 
 if (process.env.NODE_ENV === 'test') { // TODO: Create unit tests
   mongoose.connect('mongodb://localhost/APIAuthenticationTEST');
+  mongoose.set('useCreateIndex', true);
 } else {
   mongoose.connect('mongodb://localhost/APIAuthentication');
+  mongoose.set('useCreateIndex', true);
 }
 
 const app = express();
@@ -22,7 +24,7 @@ if (!process.env.NODE_ENV === 'test') {
 app.use(bodyParser.json());
 
 // Routes
-app.use('/admin', require('./routes/admin'));
+app.use('/auth', require('./routes/auth'));
 app.use('/users', require('./routes/users'));
 
 module.exports = app;

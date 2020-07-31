@@ -1,62 +1,31 @@
-const JWT = require('jsonwebtoken');
-
-const User = require('../models/user');
-const { JWT_SECRET } = require('../configuration');
-
-const signToken = user => {
-  return JWT.sign({
-    iss: 'birmanAdmin',
-    sub: user.id,
-    iat: new Date().getTime(),
-    exp: new Date().setDate(new Date().getDate() + 1) // current time plus 1 day
-  }, JWT_SECRET);
-}
-
+const Tenant = require('../models/tenant');
 
 module.exports = {
-  register: async (req, res, next) => {
-    const { email, password } = req.value.body;
+  createUser: async (req, res, next) => {
+    const { email, password, tenant, role, givenName, familyName } = req.value.body;
 
     // check if account already exists
-    const foundUser = await User.findOne({ 'local.email': email });
+    const entity = await Tenant.findOne({ key: tenant }).exec();
+    const foundUser = entity.users.find(user => user.email === email);
     if (foundUser) {
-      return res.status(403).send({ error: 'Email already exists' });
+      return res.status(403).send({ error: 'User already exists' });
     }
 
-    // create new user
-    const newUser = new User({
-      method: 'local',
-      local: {
-        email,
-        password
-      }
-    });
-    await newUser.save();
+    const newUser = {
+      email,
+      passwordHash: password,
+      givenName,
+      familyName,
+      role
+    }
+    if (!entity.users.length) {
+      entity.users.push({ ...newUser, role: 'root' })
+      await entity.save();
+    } else {
+      entity.users.push({ ...newUser, role });
+      await entity.save();
+    }
 
-    //respond with token
-    const token = signToken(newUser)
-    res.status(200).json({ token });
-  },
-
-  login: async (req, res) => {
-    // Generate token
-    const token = signToken(req.user);
-    res.status(200).json({ token });
-  },
-
-  googleOAuth: async (req, res) => {
-    // Generate token
-    const token = signToken(req.user);
-    res.status(200).json({ token });
-  },
-
-  facebookOAuth: async (req, res) => {
-    // Generate token
-    const token = signToken(req.user);
-    res.status(200).json({ token })
-  },
-
-  secret: async (req, res) => {
-    res.status(200).json({ secret: "resource" })
+    res.status(200).json({ entity }); //TODO: figure out what to send back
   }
 }
