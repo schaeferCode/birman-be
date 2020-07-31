@@ -2,6 +2,10 @@ const Tenant = require('../models/tenant');
 
 module.exports = {
   createUser: async (req, res, next) => {
+    // check if origin is admin
+    if (req.user.role === 'user') {
+      return res.status(403).send({ error: 'New user creation is restricted to Admin users only.' });
+    }
     const { email, password, tenant, role, givenName, familyName } = req.value.body;
 
     // check if account already exists
