@@ -1,0 +1,23 @@
+{
+  "compilerOptions": {
+    "module": "commonjs",
+    "moduleResolution": "node",
+    "noImplicitAny": true,
+    "pretty": true,
+    "sourceMap": true,
+    "target": "es6",
+    "resolveJsonModule": true,
+    "baseUrl": ".",
+    "paths": {
+      "*": ["node_modules/*", "server/types/*"]
+    },
+    "outDir": "./dist",
+    "allowJs": true
+  },
+  "include": [
+    "./server/**/*"
+  ],
+  "exclude": [
+    "node_modules"
+  ]
+}
