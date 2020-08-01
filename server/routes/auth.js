@@ -3,9 +3,9 @@ const passport = require('passport');
 
 const AuthController = require('../controllers/auth');
 const { validateBody, schemas } = require('../helpers/routeHelpers');
-require('../passport'); // require passport configuration
+require('../passport.ts'); // require passport configuration
 
-const passportLocal = passport.authenticate('local', { session: false })
+const passportLocal = passport.authenticate('local', { session: false });
 // const passportJWT = passport.authenticate('jwt', { session: false });
 // const passportGoogle = passport.authenticate(
 //   'google',
@@ -17,7 +17,8 @@ const passportLocal = passport.authenticate('local', { session: false })
 // );
 // const passportFacebook = passport.authenticate('facebook', { session: false });
 
-router.route('/login')
+router
+  .route('/login')
   .post(validateBody(schemas.authSchema), passportLocal, AuthController.login);
 
 // router.route('/secret')

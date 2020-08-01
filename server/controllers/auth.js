@@ -1,24 +1,37 @@
 const JWT = require('jsonwebtoken');
 
 const signToken = ({ user, tenant }) => {
-  const { linkedAdServices, id, email, givenName, familyName, role } = user;
-  const data = { linkedAdServices, id, email, givenName, familyName, role, tenant };
+  const {
+    linkedAdServices, id, email, givenName, familyName, role,
+  } = user;
+  const data = {
+    linkedAdServices,
+    id,
+    email,
+    givenName,
+    familyName,
+    role,
+    tenant,
+  };
 
-  return JWT.sign({
-    iss: 'birmanAdmin',
-    sub: user.id,
-    iat: new Date().getTime(),
-    exp: new Date().setDate(new Date().getDate() + 1), // current time plus 1 day
-    data
-  }, process.env.JWT_SECRET);
-}
+  return JWT.sign(
+    {
+      iss: 'birmanAdmin',
+      sub: user.id,
+      iat: new Date().getTime(),
+      exp: new Date().setDate(new Date().getDate() + 1), // current time plus 1 day
+      data,
+    },
+    process.env.JWT_SECRET,
+  );
+};
 
 module.exports = {
   login: async (req, res) => {
     const { user } = req;
     const { tenant } = req.value.body;
     // Generate token
-    const token = signToken({ user, tenant: tenant });
+    const token = signToken({ user, tenant });
     res.status(200).json({ token });
   },
 
@@ -35,6 +48,6 @@ module.exports = {
   // },
 
   secret: async (req, res) => {
-    res.status(200).json({ secret: "resource" })
-  }
-}
+    res.status(200).json({ secret: 'resource' });
+  },
+};

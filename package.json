@@ -4,9 +4,13 @@
   "description": "",
   "main": "index.js",
   "scripts": {
+    "start": "npm run dev",
+    "test": "jest",
     "build": "tsc",
-    "start": "ts-node-dev --respawn --transpileOnly ./server/app.ts",
-    "prod": "tsc && node ./dist/server/app.js"
+    "lint": "eslint --fix .",
+    "dev": "ts-node-dev --respawn --transpileOnly ./server/app.ts",
+    "prod": "tsc && node ./built/server/app.js",
+    "debug": "tsc && node --inspect ./built/server/app.js"
   },
   "author": "",
   "license": "ISC",
@@ -29,8 +33,11 @@
     "passport-local": "^1.0.0"
   },
   "devDependencies": {
+    "eslint": "^7.6.0",
+    "eslint-config-airbnb-base": "^14.2.0",
+    "eslint-config-prettier": "^6.11.0",
+    "eslint-plugin-import": "^2.22.0",
     "nodemon": "^2.0.4",
-    "ts-node": "^8.10.2",
-    "ts-node-dev": "^1.0.0-pre.56"
+    "prettier": "2.0.5"
   }
 }
