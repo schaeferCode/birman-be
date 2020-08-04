@@ -1,32 +1,31 @@
-const express = require("express");
-const morgan = require("morgan");
-const bodyParser = require("body-parser");
-const mongoose = require("mongoose");
+const express = require('express');
+const morgan = require('morgan');
+const bodyParser = require('body-parser');
+const mongoose = require('mongoose');
 
 // const { GoogleAdsApi, enums } = require('google-ads-api');
 // const bizSdk = require('facebook-nodejs-business-sdk');
 // var cors = require('cors');
 
-if (process.env.NODE_ENV === "test") {
-  // TODO: Create unit tests
-  mongoose.connect("mongodb://localhost/APIAuthenticationTEST");
-  mongoose.set("useCreateIndex", true);
+if (process.env.NODE_ENV === 'test') { // TODO: Create unit tests
+  mongoose.connect('mongodb://localhost/APIAuthenticationTEST');
+  mongoose.set('useCreateIndex', true);
 } else {
-  mongoose.connect("mongodb://localhost/APIAuthentication");
-  mongoose.set("useCreateIndex", true);
+  mongoose.connect('mongodb://localhost/APIAuthentication');
+  mongoose.set('useCreateIndex', true);
 }
 
 const app = express();
 
 // Middleware
-if (process.env.NODE_ENV !== "test") {
-  app.use(morgan("dev"));
+if (!process.env.NODE_ENV === 'test') {
+  app.use(morgan('dev'));
 }
 app.use(bodyParser.json());
 
 // Routes
-app.use("/auth", require("./routes/auth"));
-app.use("/users", require("./routes/users"));
+app.use('/auth', require('./routes/auth'));
+app.use('/users', require('./routes/users'));
 
 module.exports = app;
 
@@ -39,7 +38,7 @@ module.exports = app;
 // const client = new GoogleAdsApi({
 //   client_id: '563656359501-d558fdn4p8la4gkt0poliip8c0bjjm1d.apps.googleusercontent.com',
 //   client_secret: 'kNBjrQsDgVjMOA7pnTfjtWsp',
-//   developer_token: '4G0ikfrjyiB8gn3Fp-s6tw',
+//   developer_token: '4G0ikfrjyiB8gn3Fp-s6tw',  
 // })
 
 // const customer = client.Customer({
@@ -66,15 +65,15 @@ module.exports = app;
 // app.get('/google', async (req, res) => {
 //   console.log({req})
 //   const response = await customer.report({
-//     entity: 'ad_group',
-//     attributes: ['ad_group.id', 'ad_group.name', 'ad_group.status'],
+//     entity: 'ad_group', 
+//     attributes: ['ad_group.id', 'ad_group.name', 'ad_group.status'], 
 //     metrics: ['metrics.clicks'],
-//     constraints: { 'ad_group.status': enums.AdGroupStatus.ENABLED },
-//     from_date: '2019-01-01',
-//     order_by: 'metrics.clicks',
+//     constraints: { 'ad_group.status': enums.AdGroupStatus.ENABLED }, 
+//     from_date: '2019-01-01', 
+//     order_by: 'metrics.clicks', 
 //     sort_order: 'desc',
-//     limit: 5,
+//     limit: 5, 
 //   })
 
 //   res.end(JSON.stringify(response))
-// })
+// })s

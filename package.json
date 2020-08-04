@@ -1,9 +1,14 @@
 {
   "name": "birman-be",
+  "engines": {
+    "node": ">= 14.0.0"
+  },
   "version": "1.0.0",
   "description": "",
   "main": "index.js",
   "scripts": {
+    "lint": "eslint .",
+    "lint:fix": "eslint --fix .",
     "start": "nodemon index.js"
   },
   "author": "",
@@ -27,6 +32,10 @@
     "passport-local": "^1.0.0"
   },
   "devDependencies": {
-    "nodemon": "^2.0.4"
+    "eslint": "^7.6.0",
+    "eslint-config-prettier": "^6.11.0",
+    "eslint-plugin-node": "^11.1.0",
+    "nodemon": "^2.0.4",
+    "prettier": "2.0.5"
   }
 }

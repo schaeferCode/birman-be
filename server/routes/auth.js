@@ -3,7 +3,7 @@ const passport = require('passport');
 
 const AuthController = require('../controllers/auth');
 const { validateBody, schemas } = require('../helpers/routeHelpers');
-require('../passport.ts'); // require passport configuration
+require('../passport'); // require passport configuration
 
 const passportLocal = passport.authenticate('local', { session: false });
 // const passportJWT = passport.authenticate('jwt', { session: false });
