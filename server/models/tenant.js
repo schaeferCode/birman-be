@@ -8,113 +8,113 @@ const adServicesSchema = new Schema({
   name: {
     type: String,
     required: true,
-    enum: AD_SERVICES_LIST
+    enum: AD_SERVICES_LIST,
   },
   serviceClientId: {
-    type: String
+    type: String,
   },
   active: {
     type: Boolean,
-    default: false
+    default: false,
   },
   dateUpdated: {
     type: Date,
-    default: Date.now
-  }
-})
+    default: Date.now,
+  },
+});
 
 const activatedAdServices = new Schema({
   name: {
     type: String,
     required: true,
-    enum: AD_SERVICES_LIST
+    enum: AD_SERVICES_LIST,
   },
   serviceUserId: {
     type: String,
-    required: true
+    required: true,
   },
   active: {
     type: Boolean,
-    default: false
+    default: false,
   },
   dateUpdated: {
     type: Date,
-    default: Date.now
-  }
-})
+    default: Date.now,
+  },
+});
 
 const userSchema = new Schema({
   givenName: {
     type: String,
-    required: true
+    required: true,
   },
   familyName: {
     type: String,
-    required: true
+    required: true,
   },
   email: {
     type: String,
     lowercase: true,
-    required: true
+    required: true,
   },
   passwordHash: {
     type: String,
-    required: true
+    required: true,
   },
   role: {
     type: String,
     required: true,
-    enum: ['admin', 'user', 'root']
+    enum: ['admin', 'user', 'root'],
   },
   dateCreated: {
-    type: Date, 
-    default: Date.now
+    type: Date,
+    default: Date.now,
   },
   linkedAdServices: {
-    type: [activatedAdServices]
+    type: [activatedAdServices],
   },
   dateUpdated: {
     type: Date,
-    default: Date.now
-  }
-})
-  
+    default: Date.now,
+  },
+});
+
 const tenantSchema = new Schema({
   key: {
     type: String,
     required: true,
     unique: true,
-    lowercase: true
+    lowercase: true,
   },
   name: {
     type: String,
-    required: true
+    required: true,
   },
   adServices: {
-    type: [adServicesSchema]
+    type: [adServicesSchema],
   },
   users: {
-    type: [userSchema]
-  }
-})
+    type: [userSchema],
+  },
+});
 
-userSchema.pre('save', async function(next) {
+userSchema.pre('save', async function (next) {
   try {
     // Generate a password hash
-    this.passwordHash = await bcrypt.hash(this.passwordHash, 10)
+    this.passwordHash = await bcrypt.hash(this.passwordHash, 10);
     next();
   } catch (error) {
     next(error);
   }
-})
+});
 
-userSchema.methods.isValidPassword = async function(submittedPassword) {
+userSchema.methods.isValidPassword = async function (submittedPassword) {
   try {
     return await bcrypt.compare(submittedPassword, this.passwordHash);
   } catch (error) {
     throw new Error(error);
   }
-}
+};
 
 // Create a model
 const Tenant = mongoose.model('tenant', tenantSchema);

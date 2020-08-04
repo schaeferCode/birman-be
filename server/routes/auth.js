@@ -17,9 +17,7 @@ const passportLocal = passport.authenticate('local', { session: false });
 // );
 // const passportFacebook = passport.authenticate('facebook', { session: false });
 
-router
-  .route('/login')
-  .post(validateBody(schemas.authSchema), passportLocal, AuthController.login);
+router.route('/login').post(validateBody(schemas.authSchema), passportLocal, AuthController.login);
 
 // router.route('/secret')
 //   .get(passportJWT, UsersController.secret);

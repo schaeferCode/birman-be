@@ -7,7 +7,8 @@ const mongoose = require('mongoose');
 // const bizSdk = require('facebook-nodejs-business-sdk');
 // var cors = require('cors');
 
-if (process.env.NODE_ENV === 'test') { // TODO: Create unit tests
+if (process.env.NODE_ENV === 'test') {
+  // TODO: Create unit tests
   mongoose.connect('mongodb://localhost/APIAuthenticationTEST');
   mongoose.set('useCreateIndex', true);
 } else {
@@ -38,7 +39,7 @@ module.exports = app;
 // const client = new GoogleAdsApi({
 //   client_id: '563656359501-d558fdn4p8la4gkt0poliip8c0bjjm1d.apps.googleusercontent.com',
 //   client_secret: 'kNBjrQsDgVjMOA7pnTfjtWsp',
-//   developer_token: '4G0ikfrjyiB8gn3Fp-s6tw',  
+//   developer_token: '4G0ikfrjyiB8gn3Fp-s6tw',
 // })
 
 // const customer = client.Customer({
@@ -65,15 +66,15 @@ module.exports = app;
 // app.get('/google', async (req, res) => {
 //   console.log({req})
 //   const response = await customer.report({
-//     entity: 'ad_group', 
-//     attributes: ['ad_group.id', 'ad_group.name', 'ad_group.status'], 
+//     entity: 'ad_group',
+//     attributes: ['ad_group.id', 'ad_group.name', 'ad_group.status'],
 //     metrics: ['metrics.clicks'],
-//     constraints: { 'ad_group.status': enums.AdGroupStatus.ENABLED }, 
-//     from_date: '2019-01-01', 
-//     order_by: 'metrics.clicks', 
+//     constraints: { 'ad_group.status': enums.AdGroupStatus.ENABLED },
+//     from_date: '2019-01-01',
+//     order_by: 'metrics.clicks',
 //     sort_order: 'desc',
-//     limit: 5, 
+//     limit: 5,
 //   })
 
 //   res.end(JSON.stringify(response))
-// })s
+// })

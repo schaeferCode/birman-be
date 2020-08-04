@@ -6,7 +6,6 @@ const UsersController = require('../controllers/users');
 
 const passportJWT = passport.authenticate('jwt', { session: false });
 
-router.route('/create')
-  .post(validateBody(schemas.newUserSchema), passportJWT, UsersController.createUser,);
+router.route('/create').post(validateBody(schemas.newUserSchema), passportJWT, UsersController.createUser);
 
 module.exports = router;

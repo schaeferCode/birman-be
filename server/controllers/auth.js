@@ -1,9 +1,7 @@
 const JWT = require('jsonwebtoken');
 
 const signToken = ({ user, tenant }) => {
-  const {
-    linkedAdServices, id, email, givenName, familyName, role,
-  } = user;
+  const { linkedAdServices, id, email, givenName, familyName, role } = user;
   const data = {
     linkedAdServices,
     id,
@@ -22,7 +20,7 @@ const signToken = ({ user, tenant }) => {
       exp: new Date().setDate(new Date().getDate() + 1), // current time plus 1 day
       data,
     },
-    process.env.JWT_SECRET,
+    process.env.JWT_SECRET
   );
 };
 
