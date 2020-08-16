@@ -41,6 +41,13 @@ const activatedAdServices = new Schema({
     type: Date,
     default: Date.now,
   },
+  accessToken: {
+    type: String,
+    require: true,
+  },
+  refreshToken: {
+    type: String,
+  }
 });
 
 const userSchema = new Schema({

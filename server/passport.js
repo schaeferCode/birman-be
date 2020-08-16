@@ -1,38 +1,21 @@
 const passport = require('passport');
-const { Strategy: JwtStrategy, ExtractJwt } = require('passport-jwt');
 const { Strategy: LocalStrategy } = require('passport-local');
-// const { OAuth2Strategy: GoogleStrategy } = require('passport-google-oauth');
+const { OAuth2Strategy: GoogleStrategy } = require('passport-google-oauth');
 // var { Strategy: FacebookStrategy } = require('passport-facebook');
+const { GoogleAdsApi, enums } = require('google-ads-api');
+const {
+  GoogleAdsClient,
+  SearchGoogleAdsRequest,
+  SearchGoogleAdsResponse,
+  GetCustomerRequest,
+  GetUserListRequest,
+  ListAccessibleCustomersRequest,
+  Campaign,
+  Metrics
+} = require('google-ads-node');
+const { AdwordsUser } = require('node-adwords');
 
 const Tenant = require('./models/tenant');
-
-// JWT Strategy
-passport.use(
-  new JwtStrategy(
-    {
-      jwtFromRequest: ExtractJwt.fromHeader('authorization'),
-      secretOrKey: process.env.JWT_SECRET,
-    },
-    async (payload, done) => {
-      try {
-        // Find the user specified in token
-        const entity = await Tenant.findOne({ key: payload.data.tenant });
-        // user document method ".id()" to find user
-        const user = entity.users.id(payload.data.id);
-
-        // if user doesn't exist, handle it
-        if (!user) {
-          return done(null, false);
-        }
-
-        // Otherwise, return the user
-        done(null, user);
-      } catch (error) {
-        done(error, false);
-      }
-    }
-  )
-);
 
 // Local Strategy
 passport.use(
@@ -66,33 +49,116 @@ passport.use(
 );
 
 // // Google OAuth Strategy
-// passport.use(new GoogleStrategy({
-//   clientID: process.env.GOOGLE_CLIENT_ID,
-//   clientSecret: process.env.GOOGLE_CLIENT_SECRET,
-//   callbackURL: '/users/oauth/google/callback'
-// }, async (accessToken, refreshToken, profile, done) => {
-//   try {
-//     // Find user and return
-//     const user = await User.findOne({ 'google.id': profile.id });
-//     if (user) {
-//       console.log('user already exists')
-//       return done(null, user);
-//     }
+passport.use(new GoogleStrategy({
+  clientID: process.env.GOOGLE_CLIENT_ID,
+  clientSecret: process.env.GOOGLE_CLIENT_SECRET,
+  callbackURL: '/ad-services/oauth/google/callback',
+  passReqToCallback: true,
+  }, async (req, accessToken, refreshToken, profile, done) => {
 
-//     // if no user then create one and return
-//     const newUser = new User({
-//       method: 'google',
-//       google: {
-//         id: profile.id,
-//         email: profile.emails[0].value
-//       }
-//     })
-//     await newUser.save();
+    function setManagerAccount(err, result, next) {
+      console.log({err})
+      console.log({result})
+      console.log('60')
+      const managerAccount = result.find((account) => {
+        return account.canManageClients && account.descriptiveName === 'John Smith Test Manager Acct'
+      })
+      console.log({managerAccount})
+      this.clientCustomerId = managerAccount.customerId
+      console.log('66')
+      next();
+    }
 
-//     done(null, newUser);
-//   } catch (error) {
-//     done(error, false, error.message);
-//   }
+    function getSubAccounts() {
+      console.log('71')
+      const managedCustomerService = this.getService('ManagedCustomerService', 'v201809');
+      const selectors = {
+        'fields': ['TestAccount']
+      }
+      console.log('76')
+      managedCustomerService.get({serviceSelector: selectors}, (err, result) => {
+        console.log('herer')
+        console.log({err})
+        console.log({result})
+      })
+    }
+
+    const user = new AdwordsUser({
+      developerToken: '4G0ikfrjyiB8gn3Fp-s6tw',
+      userAgent: 'Birman',
+      client_id: process.env.GOOGLE_CLIENT_ID,
+      client_secret: process.env.GOOGLE_CLIENT_SECRET,
+      refresh_token: refreshToken,
+      access_token: accessToken
+    })
+    const customerService = user.getService('CustomerService', 'v201809');
+    customerService.getCustomers({}, setManagerAccount(getSubAccounts));
+
+
+    // const client = new GoogleAdsApi({
+    //   client_id: '563656359501-d558fdn4p8la4gkt0poliip8c0bjjm1d.apps.googleusercontent.com',
+    //   client_secret: 'kNBjrQsDgVjMOA7pnTfjtWsp',
+    //   developer_token: '4G0ikfrjyiB8gn3Fp-s6tw',
+    // })
+
+    // const customer = client.Customer({
+    //   customer_account_id: '604-413-0368',
+    //   login_customer_id: '604-413-0368', // Optionally provide a login-customer-id
+    //   refresh_token: refreshToken,
+    // })
+
+    // let response = await customer.get('3731137021')
+    
+    // const response = await customer.report({
+    //   entity: 'ad_group',
+    //   attributes: ['ad_group.id', 'ad_group.name', 'ad_group.status'],
+    //   metrics: ['metrics.clicks'],
+    //   constraints: { 'ad_group.status': enums.AdGroupStatus.ENABLED },
+    //   from_date: '2019-01-01',
+    //   order_by: 'metrics.clicks',
+    //   sort_order: 'desc',
+    //   limit: 5,
+    // })  
+
+    // console.log('respon', JSON.stringify(response))
+  
+    // res.end(JSON.stringify(response))
+
+    // AS A TRIAL
+    // get entity
+    // try {
+    //   const entity = await Tenant.findOne({ 'users.email': profile.emails[0].value}) // TODO: after verify tokens, grab entity with tenant
+    // } catch (error) {
+      
+    // }
+    // const entity = 
+    // Store tokens
+  }));
+
+
+
+  // try {
+  //   // Find user and return
+  //   const user = await User.findOne({ 'google.id': profile.id });
+  //   if (user) {
+  //     console.log('user already exists')
+  //     return done(null, user);
+  //   }
+
+  //   // if no user then create one and return
+  //   const newUser = new User({
+  //     method: 'google',
+  //     google: {
+  //       id: profile.id,
+  //       email: profile.emails[0].value
+  //     }
+  //   })
+  //   await newUser.save();
+
+  //   done(null, newUser);
+  // } catch (error) {
+  //   done(error, false, error.message);
+  // }
 // }));
 
 // // Facebook OAuth Strategy

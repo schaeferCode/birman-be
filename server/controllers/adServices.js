@@ -1,6 +1,17 @@
 const Tenant = require('../models/tenant');
 
 module.exports = {
+  linkGoogleAccount: async (req, res) => {
+    
+  },
+
+  // googleOAuth: async (req, res) => {
+  //   // Generate token
+  //   const token = signToken(req.user);
+  //   res.status(200).json({ token });
+  // },
+
+
   createUser: async (req, res) => {
     const { email, password, tenant, role, givenName, familyName } = req.value.body;
 

@@ -29,5 +29,11 @@ module.exports = {
       givenName: Joi.string().required(),
       familyName: Joi.string().required(),
     }),
+    editUserSchema: Joi.object().keys({
+      email: Joi.string().required(),
+      role: Joi.string(),
+      givenName: Joi.string(),
+      familyName: Joi.string(),
+    }),
   },
 };
