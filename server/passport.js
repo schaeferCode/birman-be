@@ -2,18 +2,6 @@ const passport = require('passport');
 const { Strategy: LocalStrategy } = require('passport-local');
 const { OAuth2Strategy: GoogleStrategy } = require('passport-google-oauth');
 // var { Strategy: FacebookStrategy } = require('passport-facebook');
-const { GoogleAdsApi, enums } = require('google-ads-api');
-const {
-  GoogleAdsClient,
-  SearchGoogleAdsRequest,
-  SearchGoogleAdsResponse,
-  GetCustomerRequest,
-  GetUserListRequest,
-  ListAccessibleCustomersRequest,
-  Campaign,
-  Metrics
-} = require('google-ads-node');
-const { AdwordsUser } = require('node-adwords');
 
 const Tenant = require('./models/tenant');
 
@@ -52,47 +40,21 @@ passport.use(
 passport.use(new GoogleStrategy({
   clientID: process.env.GOOGLE_CLIENT_ID,
   clientSecret: process.env.GOOGLE_CLIENT_SECRET,
-  callbackURL: '/ad-services/oauth/google/callback',
-  passReqToCallback: true,
-  }, async (req, accessToken, refreshToken, profile, done) => {
-
-    function setManagerAccount(err, result, next) {
-      console.log({err})
-      console.log({result})
-      console.log('60')
-      const managerAccount = result.find((account) => {
-        return account.canManageClients && account.descriptiveName === 'John Smith Test Manager Acct'
-      })
-      console.log({managerAccount})
-      this.clientCustomerId = managerAccount.customerId
-      console.log('66')
-      next();
+  callbackURL: '/ad-services/oauth/google/callback'
+  }, async (accessToken, refreshToken, profile, done) => {
+    const googleUserAccount = {
+      accessToken,
+      refreshToken,
+      profile
     }
+    done(null, googleUserAccount)
 
-    function getSubAccounts() {
-      console.log('71')
-      const managedCustomerService = this.getService('ManagedCustomerService', 'v201809');
-      const selectors = {
-        'fields': ['TestAccount']
-      }
-      console.log('76')
-      managedCustomerService.get({serviceSelector: selectors}, (err, result) => {
-        console.log('herer')
-        console.log({err})
-        console.log({result})
-      })
-    }
+    
 
-    const user = new AdwordsUser({
-      developerToken: '4G0ikfrjyiB8gn3Fp-s6tw',
-      userAgent: 'Birman',
-      client_id: process.env.GOOGLE_CLIENT_ID,
-      client_secret: process.env.GOOGLE_CLIENT_SECRET,
-      refresh_token: refreshToken,
-      access_token: accessToken
-    })
-    const customerService = user.getService('CustomerService', 'v201809');
-    customerService.getCustomers({}, setManagerAccount(getSubAccounts));
+    // console.log({user})
+    // const customerService = user.getService('CustomerService', 'v201809');
+    // console.log({customerService})
+    // customerService.getCustomers({}, setManagerAccount);
 
 
     // const client = new GoogleAdsApi({

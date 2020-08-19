@@ -1,8 +1,41 @@
+const { AdwordsUser } = require('node-adwords');
+
+const { googleGetRequest } = require('../helpers/serviceHelpers');
 const Tenant = require('../models/tenant');
 
 module.exports = {
   linkGoogleAccount: async (req, res) => {
+    const { refreshToken, accessToken } = req.user
+
+    const user = new AdwordsUser({
+      developerToken: '4G0ikfrjyiB8gn3Fp-s6tw',
+      userAgent: 'Birman',
+      client_id: process.env.GOOGLE_CLIENT_ID,
+      client_secret: process.env.GOOGLE_CLIENT_SECRET,
+      refresh_token: refreshToken,
+      access_token: accessToken
+    })
     
+    // get manager account id and set to user object
+    const customerService = user.getService('CustomerService', 'v201809');
+    const userRelatedAccounts = await googleGetRequest(customerService, 'getCustomers');
+    const managerAccount = userRelatedAccounts.find((account) => {
+      return account.canManageClients && account.descriptiveName === 'John Smith Test Manager Acct'
+    })
+    user.credentials.clientCustomerId = managerAccount.customerId;
+
+    // save managerAccountId to tenant
+    
+
+    // get all sub accounts
+    const managedCustomerService = user.getService('ManagedCustomerService', 'v201809');
+    const subAccounts = await googleGetRequest(managedCustomerService, 'get', {
+      serviceSelector: {
+        fields: ['TestAccount']
+      }
+    })
+
+    res.send({ subAccounts })
   },
 
   // googleOAuth: async (req, res) => {
