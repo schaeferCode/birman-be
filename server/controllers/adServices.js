@@ -25,9 +25,9 @@ module.exports = {
     user.credentials.clientCustomerId = managerAccount.customerId;
 
     // save managerAccountId to tenant
-    
 
-    // get all sub accounts
+
+    // get all sub accounts and return them to client
     const managedCustomerService = user.getService('ManagedCustomerService', 'v201809');
     const subAccounts = await googleGetRequest(managedCustomerService, 'get', {
       serviceSelector: {
@@ -37,13 +37,6 @@ module.exports = {
 
     res.send({ subAccounts })
   },
-
-  // googleOAuth: async (req, res) => {
-  //   // Generate token
-  //   const token = signToken(req.user);
-  //   res.status(200).json({ token });
-  // },
-
 
   createUser: async (req, res) => {
     const { email, password, tenant, role, givenName, familyName } = req.value.body;
