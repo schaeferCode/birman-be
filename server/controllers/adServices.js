@@ -22,10 +22,11 @@ module.exports = {
     const managerAccount = userRelatedAccounts.find((account) => {
       return account.canManageClients && account.descriptiveName === 'John Smith Test Manager Acct'
     })
+    console.log({managerAccount})
     user.credentials.clientCustomerId = managerAccount.customerId;
 
     // save managerAccountId to tenant
-
+    // TODO: const entity = await Tenant.findOne({ key: tenant })
 
     // get all sub accounts and return them to client
     const managedCustomerService = user.getService('ManagedCustomerService', 'v201809');
