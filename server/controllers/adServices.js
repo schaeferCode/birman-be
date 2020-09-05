@@ -1,10 +1,14 @@
 const { AdwordsUser } = require('node-adwords');
+const Redis = require("ioredis");
 
 const { googleGetRequest } = require('../helpers/serviceHelpers');
 const Tenant = require('../models/tenant');
 
+const redis = new Redis();
+
 module.exports = {
   linkGoogleAccount: async (req, res) => {
+
     const { refreshToken, accessToken } = req.user
 
     const user = new AdwordsUser({
@@ -36,7 +40,9 @@ module.exports = {
       }
     })
 
-    res.send({ subAccounts })
+    redis.set(managerAccount.customerId, JSON.stringify(subAccounts))
+
+    res.redirect('http://localhost:8000/')
   },
 
   createUser: async (req, res) => {

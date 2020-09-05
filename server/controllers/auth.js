@@ -12,16 +12,13 @@ const signToken = ({ user, tenant }) => {
     tenant,
   };
 
-  return JWT.sign(
-    {
-      iss: 'birmanAdmin',
-      sub: user.id,
-      iat: Math.floor(new Date().getTime()/1000),
-      exp: Math.floor(new Date().getTime()/1000) + 86400, // current time plus 1 day
-      data,
-    },
-    process.env.JWT_SECRET
-  );
+  const jwtSignOptions = {
+    issuer: 'birmanAdmin',
+    subject: user.id,
+    expiresIn: '24h'
+  }
+
+  return JWT.sign(data, process.env.JWT_SECRET, jwtSignOptions);
 };
 
 module.exports = {
