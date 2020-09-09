@@ -1,84 +1,75 @@
 const { AdwordsUser } = require('node-adwords');
+// const { GoogleAdsApi, enums } = require('google-ads-api');
 const Redis = require("ioredis");
 
 const { googleGetRequest } = require('../helpers/serviceHelpers');
-const Tenant = require('../models/tenant');
+// const Tenant = require('../models/tenant');
+
+const ADWORDS_API_VERSION = 'v201809'
 
 const redis = new Redis();
-
+// const client = new GoogleAdsApi({
+  //   client_id: process.env.GOOGLE_CLIENT_ID,
+  //   client_secret: process.env.GOOGLE_CLIENT_SECRET,
+  //   developer_token: process.env.GOOGLE_DEV_TOKEN,
+  // })
+  
 module.exports = {
   linkGoogleAccount: async (req, res) => {
-
     const { refreshToken, accessToken } = req.user
-
-    const user = new AdwordsUser({
-      developerToken: '4G0ikfrjyiB8gn3Fp-s6tw',
-      userAgent: 'Birman',
+    const adWordsUser = new AdwordsUser({
+      access_token: accessToken,
       client_id: process.env.GOOGLE_CLIENT_ID,
       client_secret: process.env.GOOGLE_CLIENT_SECRET,
+      developerToken: process.env.GOOGLE_DEV_TOKEN,
       refresh_token: refreshToken,
-      access_token: accessToken
+      userAgent: 'Birman'
     })
-    
-    // get manager account id and set to user object
-    const customerService = user.getService('CustomerService', 'v201809');
+
+    // get manager account id and set to adwordsUser object
+    const customerService = adWordsUser.getService('CustomerService', ADWORDS_API_VERSION);
     const userRelatedAccounts = await googleGetRequest(customerService, 'getCustomers');
     const managerAccount = userRelatedAccounts.find((account) => {
       return account.canManageClients && account.descriptiveName === 'John Smith Test Manager Acct'
     })
-    console.log({managerAccount})
-    user.credentials.clientCustomerId = managerAccount.customerId;
+    adWordsUser.credentials.clientCustomerId = managerAccount.customerId;
 
-    // save managerAccountId to tenant
-    // TODO: const entity = await Tenant.findOne({ key: tenant })
-
-    // get all sub accounts and return them to client
-    const managedCustomerService = user.getService('ManagedCustomerService', 'v201809');
+    // get all sub accounts and set to redis
+    const managedCustomerService = adWordsUser.getService('ManagedCustomerService', ADWORDS_API_VERSION);
     const subAccounts = await googleGetRequest(managedCustomerService, 'get', {
       serviceSelector: {
-        fields: ['TestAccount']
+        fields: ['TestAccount', 'AccountLabels', 'Name', 'CustomerId']
       }
     })
+    console.log('{subAccounts}', JSON.stringify(subAccounts))
 
     redis.set(managerAccount.customerId, JSON.stringify(subAccounts))
 
-    res.redirect('http://localhost:8000/')
-  },
+    res.redirect(`http://localhost:8000/user-administration/add-users-batch?managerId=${managerAccount.customerId}`)
+  }
 
-  createUser: async (req, res) => {
-    const { email, password, tenant, role, givenName, familyName } = req.value.body;
+  // getSubAccounts: async (req, res) => {
+  //   const { managerCustomerId, clientCustomerId } = req.subAccountData.links[0];
+  //   const { refreshToken } = req.user
+  //   console.log({managerCustomerId}, {clientCustomerId})
+  //   const customer = client.Customer({
+  //     customer_account_id: clientCustomerId,
+  //     login_customer_id: managerCustomerId, // Optionally provide a login-customer-id
+  //     refresh_token: refreshToken,
+  //   })
+  //   // const response = await customer.report({
+  //   //   entity: 'ad_group',
+  //   //   attributes: ['ad_group.id', 'ad_group.name', 'ad_group.status'],
+  //   //   metrics: ['metrics.clicks'],
+  //   //   constraints: { 'ad_group.status': enums.AdGroupStatus.ENABLED },
+  //   //   from_date: '2019-01-01',
+  //   //   order_by: 'metrics.clicks',
+  //   //   sort_order: 'desc',
+  //   //   limit: 5,
+  //   // })
+  //   const response = await customer.get(clientCustomerId)
 
-    // check if account already exists
-    const entity = await Tenant.findOne({ key: tenant }).exec();
-    const foundUser = entity.users.find((user) => user.email === email);
-    if (foundUser) {
-      return res.status(403).send({ error: 'User already exists' });
-    }
+  //   console.log({response})
 
-    const newUser = {
-      email,
-      passwordHash: password,
-      givenName,
-      familyName,
-      role,
-    };
-    if (!entity.users.length) {
-      entity.users.push({ ...newUser, role: 'root' });
-      await entity.save();
-    } else {
-      entity.users.push({ ...newUser, role });
-      await entity.save();
-    }
-
-    res.status(200).json({ entity }); //TODO: figure out what to send back
-  },
-
-  editUser: async (req, res) => {
-    const { tenant } = req.payload.data;
-    const { role, givenName, familyName, email } = req.value.body;
-
-    const updatedTenant = await Tenant.findOneAndUpdate({key: tenant, 'users.email': email }, {'users.$.role': role, 'users.$.givenName': givenName, 'users.$.familyName': familyName }, {new: true})
-
-    res.status(200).json({ updatedTenant }); //TODO: figure out what to send back
-  },
+  // }
 };

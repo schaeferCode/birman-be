@@ -21,10 +21,20 @@ const signToken = ({ user, tenant }) => {
   return JWT.sign(data, process.env.JWT_SECRET, jwtSignOptions);
 };
 
+const verifyBearer = authorization => {
+  const authorizationParts = authorization.split(' ');
+  if (authorizationParts[0] === 'Bearer') {
+    return authorizationParts[1]
+  } else {
+    return false;
+  }
+};
+
 module.exports = {
   login: async (req, res) => {
     const { user } = req;
     const { tenant } = req.value.body;
+
     // Generate token
     const token = signToken({ user, tenant });
     res.status(200).json({ token });
@@ -41,19 +51,18 @@ module.exports = {
   },
 
   verify: async (req, res, next) => {
-    const { authorization: token } = req.headers;
     try {
+      const token = verifyBearer(req.headers.authorization);
       const payload = await JWT.verify(token, process.env.JWT_SECRET)
-      console.log({payload})
       req.payload = payload
       next()
     } catch (error) {
-      res.status(400).send({ error });
+      res.status(401).send({ error });
     }
   },
 
   verifyAdminRole: async (req, res, next) => {
-    const { role } = req.payload.data
+    const { role } = req.payload
     if (role === 'user') {
       return res.status(400).send('User administration is restricted to Admin users only');
     }
