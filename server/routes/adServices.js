@@ -2,6 +2,7 @@ const router = require('express-promise-router')();
 const passport = require('passport');
 
 const AdServicesController = require('../controllers/adServices');
+const AuthController = require('../controllers/auth');
 require('../passport'); // require passport configuration
 
 const passportGoogle = passport.authenticate('google',
@@ -21,6 +22,9 @@ router.route('/oauth/google')
 
 router.route('/oauth/google/callback')
   .get(passport.authenticate('google', { session: false }), AdServicesController.linkGoogleAccount);
+
+router.route('/get-sub-accounts')
+  .post(AuthController.verify, AuthController.verifyAdminRole, AdServicesController.getSubAccounts);
 
 // router.route('/oauth/facebook')
 //   .get(passportFacebook);
