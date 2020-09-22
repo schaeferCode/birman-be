@@ -137,13 +137,14 @@ const tenantSchema = new Schema({
 //   }
 // });
 
-// userSchema.methods.isValidPassword = async function (submittedPassword) {
-//   try {
-//     return await bcrypt.compare(submittedPassword, this.passwordHash);
-//   } catch (error) {
-//     throw new Error(error);
-//   }
-// };
+userSchema.methods.isValidPassword = async function (submittedPassword) {
+  return this.passwordHash === submittedPassword;
+  // try {
+  //   return await bcrypt.compare(submittedPassword, this.passwordHash);
+  // } catch (error) {
+  //   throw new Error(error);
+  // }
+};
 
 // Create a model
 const Tenant = mongoose.model('tenant', tenantSchema);

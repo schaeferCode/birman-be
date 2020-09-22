@@ -4,6 +4,7 @@ const Redis = require("ioredis");
 
 const { googleGetRequest } = require('../helpers/serviceHelpers');
 const Tenant = require('../models/tenant');
+const { exist } = require('joi');
 
 const ADWORDS_API_VERSION = 'v201809'
 
@@ -55,13 +56,14 @@ module.exports = {
     const { tenant } = req.payload;
     const { managerId } = req.body;
 
-    const entity = await Tenant.findOne({ key: tenant }).exec()
+    const entity = await Tenant.findOne({ key: tenant }).lean()
     try {
       const { entries } = JSON.parse(await redis.get(managerId));
       const updatedEntries = entries.reduce((updatedEntries, subAccount) => {
-        const existingClient = entity.clients.find(client => client.name === subAccount.name.lowerCase())
-        subAccount.active = !!existingClient
-        updatedEntries.push(subAccount)
+        const existingUser = entity.users.find(user => {          
+          return user.organizationName === subAccount.name.toLowerCase()
+        })
+        updatedEntries.push(Object.assign(subAccount, existingUser, { active: !!existingUser }))
         return updatedEntries
       }, [])
       res.status(200).send({ subAccounts: updatedEntries });
