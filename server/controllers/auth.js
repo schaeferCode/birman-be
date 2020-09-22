@@ -61,9 +61,10 @@ module.exports = {
     }
   },
 
-  verifyAdminRole: async (req, res, next) => {
+  verifyTenantAdminRole: async (req, res, next) => {
     const { role } = req.payload
-    if (role === 'user') {
+
+    if (role !== 'tenant-admin') {
       return res.status(400).send('User administration is restricted to Admin users only');
     }
     next();

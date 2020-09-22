@@ -22,9 +22,12 @@ router.route('/oauth/google')
 
 router.route('/oauth/google/callback')
   .get(passport.authenticate('google', { session: false }), AdServicesController.linkGoogleAccount);
+  
+router.route('/get-google-ad-metrics')
+  .get(AuthController.verify, AdServicesController.getGoogleAdMetrics);
 
 router.route('/get-sub-accounts')
-  .post(AuthController.verify, AuthController.verifyAdminRole, AdServicesController.getSubAccounts);
+  .post(AuthController.verify, AuthController.verifyTenantAdminRole, AdServicesController.getSubAccounts);
 
 // router.route('/oauth/facebook')
 //   .get(passportFacebook);
