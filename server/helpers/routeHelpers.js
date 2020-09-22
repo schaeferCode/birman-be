@@ -23,17 +23,26 @@ module.exports = {
     }),
     newUserSchema: Joi.object().keys({
       email: Joi.string().email().required(),
-      password: Joi.string().required(),
-      tenant: Joi.string().required(),
-      role: Joi.string().default('user'),
-      givenName: Joi.string().required(),
       familyName: Joi.string().required(),
+      givenName: Joi.string().required(),
+      organizationName: Joi.string(),
+      password: Joi.string().required(),
+      role: Joi.string().valid('tenant-admin', 'client-admin', 'user', 'root').default('user'),
+      tenant: Joi.string().required(),
     }),
     editUserSchema: Joi.object().keys({
       email: Joi.string().required(),
-      role: Joi.string(),
-      givenName: Joi.string(),
       familyName: Joi.string(),
+      givenName: Joi.string(),
+      organizationName: Joi.string(),
+      role: Joi.string(),
     }),
-  },
-};
+    batchUserCreationSchema: Joi.object({ users: Joi.object().pattern(Joi.number(), Joi.object({
+      email: Joi.string().required(),
+      familyName: Joi.string().required(),
+      givenName: Joi.string().required(),
+      name: Joi.string().required(),
+      selected: Joi.bool(),
+    }))})
+  }
+}

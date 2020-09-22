@@ -1,8 +1,9 @@
 const mongoose = require('mongoose');
-const bcrypt = require('bcryptjs');
+// const bcrypt = require('bcryptjs');
 const Schema = mongoose.Schema;
 
 const AD_SERVICES_LIST = ['google', 'facebook'];
+const ROLES = ['tenant-admin', 'client-admin', 'user', 'root'];
 
 const adServicesSchema = new Schema({
   name: {
@@ -41,14 +42,30 @@ const activatedAdServices = new Schema({
     type: Date,
     default: Date.now,
   },
-  accessToken: {
-    type: String,
-    require: true,
-  },
-  refreshToken: {
-    type: String,
-  }
+  // TODO: Maybe this will be needed?
+  // accessToken: {
+  //   type: String,
+  //   require: true,
+  // },
+  // refreshToken: {
+  //   type: String,
+  // }
 });
+
+const clientSchema = new Schema({
+  name: {
+    type: String,
+    required: true,
+    unique: true
+  },
+  displayName: {
+    type: String,
+    required: true
+  },
+  linkedAdServices: {
+    type: [activatedAdServices]
+  }
+})
 
 const userSchema = new Schema({
   givenName: {
@@ -63,6 +80,10 @@ const userSchema = new Schema({
     type: String,
     lowercase: true,
     required: true,
+    unique: true
+  },
+  organizationName: {
+    type: String,
   },
   passwordHash: {
     type: String,
@@ -71,14 +92,11 @@ const userSchema = new Schema({
   role: {
     type: String,
     required: true,
-    enum: ['admin', 'user', 'root'],
+    enum: ROLES,
   },
   dateCreated: {
     type: Date,
     default: Date.now,
-  },
-  linkedAdServices: {
-    type: [activatedAdServices],
   },
   dateUpdated: {
     type: Date,
@@ -103,25 +121,29 @@ const tenantSchema = new Schema({
   users: {
     type: [userSchema],
   },
-});
-
-userSchema.pre('save', async function (next) {
-  try {
-    // Generate a password hash
-    this.passwordHash = await bcrypt.hash(this.passwordHash, 10);
-    next();
-  } catch (error) {
-    next(error);
+  clients: {
+    type: [clientSchema]
   }
 });
 
-userSchema.methods.isValidPassword = async function (submittedPassword) {
-  try {
-    return await bcrypt.compare(submittedPassword, this.passwordHash);
-  } catch (error) {
-    throw new Error(error);
-  }
-};
+// TODO: re-enable after user things are stable...
+// userSchema.pre('save', async function (next) {
+//   try {
+//     // Generate a password hash
+//     this.passwordHash = await bcrypt.hash(this.passwordHash, 10);
+//     next();
+//   } catch (error) {
+//     next(error);
+//   }
+// });
+
+// userSchema.methods.isValidPassword = async function (submittedPassword) {
+//   try {
+//     return await bcrypt.compare(submittedPassword, this.passwordHash);
+//   } catch (error) {
+//     throw new Error(error);
+//   }
+// };
 
 // Create a model
 const Tenant = mongoose.model('tenant', tenantSchema);

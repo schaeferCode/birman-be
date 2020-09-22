@@ -3,7 +3,7 @@ const { AdwordsUser } = require('node-adwords');
 const Redis = require("ioredis");
 
 const { googleGetRequest } = require('../helpers/serviceHelpers');
-// const Tenant = require('../models/tenant');
+const Tenant = require('../models/tenant');
 
 const ADWORDS_API_VERSION = 'v201809'
 
@@ -38,7 +38,7 @@ module.exports = {
       const managedCustomerService = adWordsUser.getService('ManagedCustomerService', ADWORDS_API_VERSION);
       const subAccounts = await googleGetRequest(managedCustomerService, 'get', {
         serviceSelector: {
-          fields: ['TestAccount', 'AccountLabels', 'Name', 'CustomerId']
+          fields: ['TestAccount', 'AccountLabels', 'Name', 'CustomerId', 'CanManageClients']
         }
       })
   
@@ -52,10 +52,19 @@ module.exports = {
   },
 
   getSubAccounts: async (req, res) => {
+    const { tenant } = req.payload;
     const { managerId } = req.body;
+
+    const entity = await Tenant.findOne({ key: tenant }).exec()
     try {
-      const subAccountData = JSON.parse(await redis.get(managerId));
-      res.status(200).send({ subAccountData });
+      const { entries } = JSON.parse(await redis.get(managerId));
+      const updatedEntries = entries.reduce((updatedEntries, subAccount) => {
+        const existingClient = entity.clients.find(client => client.name === subAccount.name.lowerCase())
+        subAccount.active = !!existingClient
+        updatedEntries.push(subAccount)
+        return updatedEntries
+      }, [])
+      res.status(200).send({ subAccounts: updatedEntries });
     } catch (error) {
       res.status(404).send({ error: { message: 'Something went wrong when trying to obtain your subaccounts. Please try again.' }})
     }

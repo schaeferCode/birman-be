@@ -6,5 +6,6 @@ const AuthController = require('../controllers/auth');
 
 router.route('/create').post(AuthController.verify, AuthController.verifyAdminRole, validateBody(schemas.newUserSchema), UsersController.createUser);
 router.route('/edit').post(AuthController.verify, AuthController.verifyAdminRole, validateBody(schemas.editUserSchema), UsersController.editUser);
+router.route('/batch-user-creation').post(AuthController.verify, AuthController.verifyAdminRole, validateBody(schemas.batchUserCreationSchema), UsersController.batchUserCreation);
 
 module.exports = router;
