@@ -1,10 +1,9 @@
-const { AdwordsUser } = require('node-adwords');
+const { AdwordsReport, AdwordsUser } = require('node-adwords');
 // const { GoogleAdsApi, enums } = require('google-ads-api');
 const Redis = require("ioredis");
 
 const { googleGetRequest } = require('../helpers/serviceHelpers');
 const Tenant = require('../models/tenant');
-const { exist } = require('joi');
 
 const ADWORDS_API_VERSION = 'v201809'
 
@@ -16,8 +15,42 @@ const redis = new Redis();
   // })
   
 module.exports = {
-  linkGoogleAccount: async (req, res) => {
+  getGoogleAdMetrics: (req, res) => {
+    let report = new AdwordsReport({
+      access_token: accessToken,
+      client_id: process.env.GOOGLE_CLIENT_ID,
+      client_secret: process.env.GOOGLE_CLIENT_SECRET,
+      developerToken: process.env.GOOGLE_DEV_TOKEN,
+      refresh_token: refreshToken,
+      userAgent: 'Birman'
+    })
+    return
+  },
+
+  getSubAccounts: async (req, res) => {
+    const { tenant } = req.payload;
+    const { managerId } = req.body;
+
+    const entity = await Tenant.findOne({ key: tenant }).lean()
+    try {
+      const { entries } = JSON.parse(await redis.get(managerId));
+      const updatedEntries = entries.reduce((updatedEntries, subAccount) => {
+        const existingUser = entity.users.find(user => {
+          return user.organizationName === subAccount.name.toLowerCase()
+        })
+        updatedEntries.push(Object.assign(subAccount, existingUser, { active: !!existingUser }))
+        return updatedEntries
+      }, [])
+      res.status(200).send({ subAccounts: updatedEntries });
+    } catch (error) {
+      res.status(404).send({ error: { message: 'Something went wrong when trying to obtain your subaccounts. Please try again.' }})
+    }
+  },
+
+  linkGoogleAccount: async function (req, res) {
     const { refreshToken, accessToken } = req.user
+    
+    this.activateAdService({ refreshToken, accessToken,  })
     try {
       const adWordsUser = new AdwordsUser({
         access_token: accessToken,
@@ -52,25 +85,10 @@ module.exports = {
     }
   },
 
-  getSubAccounts: async (req, res) => {
-    const { tenant } = req.payload;
-    const { managerId } = req.body;
-
-    const entity = await Tenant.findOne({ key: tenant }).lean()
-    try {
-      const { entries } = JSON.parse(await redis.get(managerId));
-      const updatedEntries = entries.reduce((updatedEntries, subAccount) => {
-        const existingUser = entity.users.find(user => {          
-          return user.organizationName === subAccount.name.toLowerCase()
-        })
-        updatedEntries.push(Object.assign(subAccount, existingUser, { active: !!existingUser }))
-        return updatedEntries
-      }, [])
-      res.status(200).send({ subAccounts: updatedEntries });
-    } catch (error) {
-      res.status(404).send({ error: { message: 'Something went wrong when trying to obtain your subaccounts. Please try again.' }})
-    }
-  }
+  setTenantInfo: async (req, res) => {
+    const { tenant } = req.payload
+    
+  } 
 
   // getSubAccounts: async (req, res) => {
   //   const { managerCustomerId, clientCustomerId } = req.subAccountData.links[0];

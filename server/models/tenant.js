@@ -42,14 +42,13 @@ const activatedAdServices = new Schema({
     type: Date,
     default: Date.now,
   },
-  // TODO: Maybe this will be needed?
-  // accessToken: {
-  //   type: String,
-  //   require: true,
-  // },
-  // refreshToken: {
-  //   type: String,
-  // }
+  accessToken: {
+    type: String,
+    require: true,
+  },
+  refreshToken: {
+    type: String,
+  }
 });
 
 const clientSchema = new Schema({

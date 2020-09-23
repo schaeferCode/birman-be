@@ -18,16 +18,16 @@ const passportGoogle = passport.authenticate('google',
 //   .get(passportJWT, UsersController.secret);
 
 router.route('/oauth/google')
-  .get(passportGoogle);
+  .get(AuthController.verify, AuthController.verifyRole(['tenant-admin', 'root']), AdServicesController.setTenantInfo, passportGoogle);
 
 router.route('/oauth/google/callback')
   .get(passport.authenticate('google', { session: false }), AdServicesController.linkGoogleAccount);
   
 router.route('/get-google-ad-metrics')
-  .get(AuthController.verify, AdServicesController.getGoogleAdMetrics);
+  .get(AuthController.verify, AuthController.verifyRole(['client-admin', 'user']), AdServicesController.getGoogleAdMetrics);
 
 router.route('/get-sub-accounts')
-  .post(AuthController.verify, AuthController.verifyTenantAdminRole, AdServicesController.getSubAccounts);
+  .post(AuthController.verify, AuthController.verifyRole(['tenant-admin', 'root']), AdServicesController.getSubAccounts);
 
 // router.route('/oauth/facebook')
 //   .get(passportFacebook);
