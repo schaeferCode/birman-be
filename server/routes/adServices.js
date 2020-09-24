@@ -17,11 +17,11 @@ const passportGoogle = passport.authenticate('google',
 // router.route('/secret')
 //   .get(passportJWT, UsersController.secret);
 
-router.route('/oauth/google')
-  .get(AuthController.verify, AuthController.verifyRole(['tenant-admin', 'root']), AdServicesController.setTenantInfo, passportGoogle);
+router.route('/adwords/go')
+  .get(AuthController.verify, AuthController.verifyRole(['tenant-admin', 'root']), AdServicesController.handleGoogleOauthRedirect);
 
 router.route('/oauth/google/callback')
-  .get(passport.authenticate('google', { session: false }), AdServicesController.linkGoogleAccount);
+  .get(AdServicesController.authenticateGoogleUser);
   
 router.route('/get-google-ad-metrics')
   .get(AuthController.verify, AuthController.verifyRole(['client-admin', 'user']), AdServicesController.getGoogleAdMetrics);

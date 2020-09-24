@@ -1,6 +1,7 @@
-const { AdwordsReport, AdwordsUser } = require('node-adwords');
+const { AdwordsAuth, AdwordsReport, AdwordsUser } = require('node-adwords');
 // const { GoogleAdsApi, enums } = require('google-ads-api');
 const Redis = require("ioredis");
+const _ = require('lodash/core');
 
 const { googleGetRequest } = require('../helpers/serviceHelpers');
 const Tenant = require('../models/tenant');
@@ -8,6 +9,11 @@ const Tenant = require('../models/tenant');
 const ADWORDS_API_VERSION = 'v201809'
 
 const redis = new Redis();
+const googleAuthInstance = new AdwordsAuth({
+  client_id: process.env.GOOGLE_CLIENT_ID, // app id located in google dev console
+  client_secret: process.env.GOOGLE_CLIENT_SECRET, // app secret located in google dev console
+}, 'http://localhost:3000/ad-services/oauth/google/callback');
+
 // const client = new GoogleAdsApi({
   //   client_id: process.env.GOOGLE_CLIENT_ID,
   //   client_secret: process.env.GOOGLE_CLIENT_SECRET,
@@ -15,6 +21,39 @@ const redis = new Redis();
   // })
   
 module.exports = {
+  authenticateGoogleUser: (req, res) => {
+    googleAuthInstance.getAccessTokenFromAuthorizationCode(req.query.code, async (error, { access_token, refresh_token, expiry_date }) => {
+      if (error) {
+        res.status(500).send({ error: { message: 'Something went wrong when trying to link your google account. Please try again.' }})
+        return;
+      }
+      try {
+        const { tenant } = JSON.parse(req.query.state);
+        const entity = await Tenant.findOne({key: tenant }).exec();
+        const adService = entity.adServices.find(adService => adService.name === 'google'); // TODO: fix hardcode
+        if (adService) {
+          adService.accessToken = access_token;
+          adService.expiryDate = expiry_date;
+          adService.refreshToken = refresh_token;
+          await adService.save();
+        } else {
+          const newAdService = {
+            accessToken: access_token,
+            expiryDate: expiry_date,
+            name: 'google', // TODO: fix hardcode
+            refreshToken: refresh_token
+          };
+          entity.adServices.push(newAdService);
+          await entity.save()
+        }
+        res.redirect('http://localhost:8000/user-administration/');
+      } catch (error) {
+        console.log({error})
+        res.redirect('http://localhost:8000')
+      }
+    })
+  },
+
   getGoogleAdMetrics: (req, res) => {
     let report = new AdwordsReport({
       access_token: accessToken,
@@ -45,6 +84,18 @@ module.exports = {
     } catch (error) {
       res.status(404).send({ error: { message: 'Something went wrong when trying to obtain your subaccounts. Please try again.' }})
     }
+  },
+
+  handleGoogleOauthRedirect: (req, res) => {
+    const URL = googleAuthInstance.oauth2Client.generateAuthUrl({
+      access_type: 'offline',
+      prompt: 'consent',
+      scope: 'https://www.googleapis.com/auth/adwords',
+      state: JSON.stringify({ tenant: req.payload.tenant })
+    })
+    res.json({
+      redirectUrl: URL
+    })
   },
 
   linkGoogleAccount: async function (req, res) {

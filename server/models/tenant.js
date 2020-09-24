@@ -11,17 +11,28 @@ const adServicesSchema = new Schema({
     required: true,
     enum: AD_SERVICES_LIST,
   },
-  serviceClientId: {
+  serviceClientId: { // ID of manager account
     type: String,
   },
-  active: {
-    type: Boolean,
-    default: false,
+  // TODO: Maybe this is needed?
+  // active: {
+  //   type: Boolean,
+  //   default: false,
+  // },
+  accessToken: {
+    type: String,
+    require: true,
+  },
+  refreshToken: {
+    type: String,
+  },
+  expiryDate: {
+    type: String,
   },
   dateUpdated: {
     type: Date,
     default: Date.now,
-  },
+  }
 });
 
 const activatedAdServices = new Schema({
@@ -30,7 +41,7 @@ const activatedAdServices = new Schema({
     required: true,
     enum: AD_SERVICES_LIST,
   },
-  serviceUserId: {
+  serviceUserId: { // ID of client ad account
     type: String,
     required: true,
   },
@@ -41,13 +52,6 @@ const activatedAdServices = new Schema({
   dateUpdated: {
     type: Date,
     default: Date.now,
-  },
-  accessToken: {
-    type: String,
-    require: true,
-  },
-  refreshToken: {
-    type: String,
   }
 });
 
