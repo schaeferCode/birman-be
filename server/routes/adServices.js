@@ -14,8 +14,8 @@ router.route('/adwords/go')
 router.route('/oauth/google/callback')
   .get(AdServicesController.authenticateGoogleUser);
   
-router.route('/get-google-ad-metrics')
-  .get(AuthController.verify, AuthController.verifyRole(['client-admin', 'user']), AdServicesController.getGoogleAdMetrics);
+router.route('/get-google-ads-metrics')
+  .get(AuthController.verify, AdServicesController.getGoogleAdMetrics);
 
 router.route('/get-sub-accounts')
   .get(AuthController.verify, AuthController.verifyRole(['tenant-admin', 'root']), AdServicesController.getSubAccounts);

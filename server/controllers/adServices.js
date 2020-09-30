@@ -55,12 +55,13 @@ module.exports = {
     const { tenant } = req.payload;
     // get refresh and access tokens from tenant
     const entity = await Tenant.findOne({ key: tenant }).lean()
-    const { refreshToken, accessToken } = entity.adServices.find(adService => adService.name === 'google') // TODO: handle hardcode
+    const { refreshToken, accessToken, serviceClientId } = entity.adServices.find(adService => adService.name === 'google') // TODO: handle hardcode
 
     try {
       let report = new AdwordsReport({
         access_token: accessToken,
         client_id: process.env.GOOGLE_CLIENT_ID,
+        clientCustomerId: 4929529639,
         client_secret: process.env.GOOGLE_CLIENT_SECRET,
         developerToken: process.env.GOOGLE_DEV_TOKEN,
         refresh_token: refreshToken,
@@ -79,7 +80,8 @@ module.exports = {
         endDate: new Date(),
         format: 'CSV' //defaults to CSV
       }, (error, report) => {
-          console.log(error, report);
+        console.log({report})
+        console.log({error});
       });
     } catch (error) {
       console.log({error})
@@ -102,7 +104,7 @@ module.exports = {
         userAgent: 'Birman'
       })
   
-      // get manager account id (serviceClientId) and set to adwordsUser object
+      // get manager account id (AKA serviceClientId and clientCustomerId) and set to adwordsUser object
       const customerService = adWordsUser.getService('CustomerService', ADWORDS_API_VERSION);
       const userRelatedAccounts = await googleGetRequest(customerService, 'getCustomers');
       const managerAccount = userRelatedAccounts.find(account => {

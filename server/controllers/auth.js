@@ -72,6 +72,7 @@ module.exports = {
       }
   
       if (!rolesAsString.includes(role)) {
+        console.log('hererer')
         return res.status(400).send(`This page is restricted to ${rolesAsString}s only`);
       }
       next();
