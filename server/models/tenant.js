@@ -152,4 +152,18 @@ userSchema.methods.isValidPassword = async function (submittedPassword) {
 // Create a model
 const Tenant = mongoose.model('tenant', tenantSchema);
 
+// const newTenant = {
+//   name: 'John Smith Test Manager Acct',
+//   key: 'John Smith Test Manager Acct'.toLowerCase().split(' ').join('-'),
+//   users: [{
+//     givenName: 'Scott',
+//     familyName: 'Schaefer',
+//     email: 'scottschaef@gmail.com',
+//     passwordHash: 'easyPass',
+//     role: 'root'
+//   }]
+// }
+// Tenant.create(newTenant);
+
+
 module.exports = Tenant;
