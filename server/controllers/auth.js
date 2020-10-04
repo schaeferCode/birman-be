@@ -1,9 +1,9 @@
 const JWT = require('jsonwebtoken');
 
 const signToken = ({ user, tenant }) => {
-  const { linkedAdServices, id, email, givenName, familyName, role } = user;
+  const { organizationName, id, email, givenName, familyName, role } = user;
   const data = {
-    linkedAdServices,
+    organizationName,
     id,
     email,
     givenName,
@@ -72,7 +72,6 @@ module.exports = {
       }
   
       if (!rolesAsString.includes(role)) {
-        console.log('hererer')
         return res.status(400).send(`This page is restricted to ${rolesAsString}s only`);
       }
       next();

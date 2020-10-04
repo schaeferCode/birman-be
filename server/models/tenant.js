@@ -59,7 +59,8 @@ const clientSchema = new Schema({
   name: {
     type: String,
     required: true,
-    unique: true
+    unique: true,
+    index: true
   },
   displayName: {
     type: String,
@@ -83,7 +84,8 @@ const userSchema = new Schema({
     type: String,
     lowercase: true,
     required: true,
-    unique: true
+    unique: true,
+    index: true
   },
   organizationName: {
     type: String,
@@ -112,6 +114,7 @@ const tenantSchema = new Schema({
     type: String,
     required: true,
     unique: true,
+    index: true,
     lowercase: true,
   },
   name: {
@@ -151,6 +154,7 @@ userSchema.methods.isValidPassword = async function (submittedPassword) {
 
 // Create a model
 const Tenant = mongoose.model('tenant', tenantSchema);
+
 
 // const newTenant = {
 //   name: 'John Smith Test Manager Acct',

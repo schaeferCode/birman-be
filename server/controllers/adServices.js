@@ -1,7 +1,7 @@
 const { AdwordsAuth, AdwordsReport, AdwordsUser } = require('node-adwords');
 // const { GoogleAdsApi, enums } = require('google-ads-api');
 
-const { googleGetRequest } = require('../helpers/serviceHelpers');
+const { googleGetAccessTokenFromAuthorizationCode, googleGetReport, googleGetRequest } = require('../helpers/serviceHelpers');
 const Tenant = require('../models/tenant');
 
 const ADWORDS_API_VERSION = 'v201809'
@@ -18,57 +18,74 @@ const googleAuthInstance = new AdwordsAuth({
   // })
   
 module.exports = {
-  authenticateGoogleUser: (req, res) => {
-    googleAuthInstance.getAccessTokenFromAuthorizationCode(req.query.code, async (error, { access_token, refresh_token, expiry_date }) => {
-      if (error) {
-        res.status(500).send({ error: { message: 'Something went wrong when trying to link your google account. Please try again.' }})
-        return;
+  authenticateGoogleUser: async (req, res) => {
+    try {
+      const { access_token, refresh_token, expiry_date } = await googleGetAccessTokenFromAuthorizationCode(googleAuthInstance, req.query.code);
+      const { tenant } = JSON.parse(req.query.state);
+
+      const entity = await Tenant.findOne({key: tenant }).exec();
+      const adService = entity.adServices.find(adService => adService.name === 'google'); // TODO: fix hardcode
+      if (adService) {
+        adService.accessToken = access_token;
+        adService.expiryDate = expiry_date;
+        adService.refreshToken = refresh_token;
+        await adService.save(); // TODO: Cannot save on subdoc. Must use entity object.
+      } else {
+        const adWordsUser = new AdwordsUser({
+          access_token: access_token,
+          client_id: process.env.GOOGLE_CLIENT_ID,
+          client_secret: process.env.GOOGLE_CLIENT_SECRET,
+          developerToken: process.env.GOOGLE_DEV_TOKEN,
+          refresh_token: refresh_token,
+          userAgent: 'Birman'
+        })
+    
+        // get manager account id (AKA serviceClientId and clientCustomerId)
+        const customerService = adWordsUser.getService('CustomerService', ADWORDS_API_VERSION);
+        const userRelatedAccounts = await googleGetRequest(customerService, 'getCustomers');
+        const managerAccount = userRelatedAccounts.find(account => {
+          return account.canManageClients && account.descriptiveName === entity.name
+        })
+  
+        const newAdService = {
+          accessToken: access_token,
+          expiryDate: expiry_date,
+          name: 'google', // TODO: fix hardcode
+          refreshToken: refresh_token,
+          serviceClientId: managerAccount.customerId
+        };
+        entity.adServices.push(newAdService);
+        await entity.save()
       }
-      try {
-        const { tenant } = JSON.parse(req.query.state);
-        const entity = await Tenant.findOne({key: tenant }).exec();
-        const adService = entity.adServices.find(adService => adService.name === 'google'); // TODO: fix hardcode
-        if (adService) {
-          adService.accessToken = access_token;
-          adService.expiryDate = expiry_date;
-          adService.refreshToken = refresh_token;
-          await adService.save();
-        } else {
-          const newAdService = {
-            accessToken: access_token,
-            expiryDate: expiry_date,
-            name: 'google', // TODO: fix hardcode
-            refreshToken: refresh_token
-          };
-          entity.adServices.push(newAdService);
-          await entity.save()
-        }
-        res.redirect('http://localhost:8000/user-administration/');
-      } catch (error) {
-        console.log({error})
-        res.redirect('http://localhost:8000')
-      }
-    })
+      res.redirect('http://localhost:8000/user-administration/');
+    } catch (error) {
+      console.log({error})
+      res.redirect('http://localhost:8000')
+    }
   },
 
   getGoogleAdMetrics: async (req, res) => {
-    const { tenant } = req.payload;
+    const { tenant, organizationName } = req.payload;
     // get refresh and access tokens from tenant
     const entity = await Tenant.findOne({ key: tenant }).lean()
-    const { refreshToken, accessToken, serviceClientId } = entity.adServices.find(adService => adService.name === 'google') // TODO: handle hardcode
+    const { refreshToken, accessToken } = entity.adServices.find(adService => adService.name === 'google') // TODO: handle hardcode
+
+    // get serviceUserId (AKA clientCustomerId) from relative client account
+    const { linkedAdServices } = entity.clients.find(client => client.name === organizationName)
+    const { serviceUserId } = linkedAdServices.find(adService => adService.name === 'google') // TODO: handle hardcode
 
     try {
-      let report = new AdwordsReport({
+      let adWordsReportInstance = new AdwordsReport({
         access_token: accessToken,
         client_id: process.env.GOOGLE_CLIENT_ID,
-        clientCustomerId: 4929529639,
+        clientCustomerId: serviceUserId,
         client_secret: process.env.GOOGLE_CLIENT_SECRET,
         developerToken: process.env.GOOGLE_DEV_TOKEN,
         refresh_token: refreshToken,
         userAgent: 'Birman'
       })
 
-      report.getReport(ADWORDS_API_VERSION, {
+      reportOptions = {
         reportName: 'Custom Adgroup Performance Report',
         reportType: 'CAMPAIGN_PERFORMANCE_REPORT',
         fields: ['CampaignId', 'Impressions', 'Clicks', 'Cost'],
@@ -79,10 +96,10 @@ module.exports = {
         startDate: new Date("07/10/2016"),
         endDate: new Date(),
         format: 'CSV' //defaults to CSV
-      }, (error, report) => {
-        console.log({report})
-        console.log({error});
-      });
+      }
+      const report = await googleGetReport(adWordsReportInstance, ADWORDS_API_VERSION, reportOptions)
+      console.log({report})
+
     } catch (error) {
       console.log({error})
     }
@@ -92,26 +109,18 @@ module.exports = {
     const { tenant } = req.payload;
     // get refresh and access tokens from tenant
     const entity = await Tenant.findOne({ key: tenant }).lean()
-    const { refreshToken, accessToken } = entity.adServices.find(adService => adService.name === 'google') // TODO: handle hardcode
+    const { refreshToken, accessToken, serviceClientId } = entity.adServices.find(adService => adService.name === 'google') // TODO: handle hardcode
 
     try {
       const adWordsUser = new AdwordsUser({
         access_token: accessToken,
         client_id: process.env.GOOGLE_CLIENT_ID,
         client_secret: process.env.GOOGLE_CLIENT_SECRET,
+        clientCustomerId: serviceClientId,
         developerToken: process.env.GOOGLE_DEV_TOKEN,
         refresh_token: refreshToken,
         userAgent: 'Birman'
       })
-  
-      // get manager account id (AKA serviceClientId and clientCustomerId) and set to adwordsUser object
-      const customerService = adWordsUser.getService('CustomerService', ADWORDS_API_VERSION);
-      const userRelatedAccounts = await googleGetRequest(customerService, 'getCustomers');
-      const managerAccount = userRelatedAccounts.find(account => {
-        return account.canManageClients && account.descriptiveName === 'John Smith Test Manager Acct' // TODO: handle hardcode
-      })
-      adWordsUser.credentials.clientCustomerId = managerAccount.customerId;
-
       // get all sub accounts
       const managedCustomerService = adWordsUser.getService('ManagedCustomerService', ADWORDS_API_VERSION);
       const { entries: subAccounts} = await googleGetRequest(managedCustomerService, 'get', {
