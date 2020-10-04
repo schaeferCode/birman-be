@@ -1,5 +1,6 @@
 const { AdwordsAuth, AdwordsReport, AdwordsUser } = require('node-adwords');
 // const { GoogleAdsApi, enums } = require('google-ads-api');
+const neatCsv = require('neat-csv');
 
 const { googleGetAccessTokenFromAuthorizationCode, googleGetReport, googleGetRequest } = require('../helpers/serviceHelpers');
 const Tenant = require('../models/tenant');
@@ -97,9 +98,11 @@ module.exports = {
         endDate: new Date(),
         format: 'CSV' //defaults to CSV
       }
-      const report = await googleGetReport(adWordsReportInstance, ADWORDS_API_VERSION, reportOptions)
-      console.log({report})
-
+      let report = await googleGetReport(adWordsReportInstance, ADWORDS_API_VERSION, reportOptions)
+      report = await neatCsv(report, {
+        skipLines: 1
+      })
+      res.status(200).send({ report })
     } catch (error) {
       console.log({error})
     }
