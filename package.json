@@ -1,7 +1,7 @@
 {
   "name": "birman-be",
   "engines": {
-    "node": ">= 14.0.0"
+    "node": "12.18.4"
   },
   "version": "1.0.0",
   "description": "",
@@ -30,6 +30,7 @@
     "lodash": "^4.17.20",
     "mongoose": "^5.9.22",
     "morgan": "^1.10.0",
+    "neat-csv": "^5.2.0",
     "node-adwords": "^201809.0.2",
     "passport": "^0.4.1",
     "passport-facebook": "^3.0.0",

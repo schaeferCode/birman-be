@@ -1,9 +1,9 @@
 const JWT = require('jsonwebtoken');
 
 const signToken = ({ user, tenant }) => {
-  const { linkedAdServices, id, email, givenName, familyName, role } = user;
+  const { organizationName, id, email, givenName, familyName, role } = user;
   const data = {
-    linkedAdServices,
+    organizationName,
     id,
     email,
     givenName,
@@ -61,11 +61,20 @@ module.exports = {
     }
   },
 
-  verifyAdminRole: async (req, res, next) => {
-    const { role } = req.payload
-    if (role === 'user') {
-      return res.status(400).send('User administration is restricted to Admin users only');
+  verifyRole: (validRole) => {
+    return async (req, res, next) => {
+      const { role } = req.payload
+      let rolesAsString
+      if (Array.isArray(validRole)) {
+        rolesAsString = validRole.join('s and ')
+      } else {
+        rolesAsString = validRole
+      }
+  
+      if (!rolesAsString.includes(role)) {
+        return res.status(400).send(`This page is restricted to ${rolesAsString}s only`);
+      }
+      next();
     }
-    next();
   }
 };

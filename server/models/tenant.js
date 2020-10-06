@@ -11,17 +11,28 @@ const adServicesSchema = new Schema({
     required: true,
     enum: AD_SERVICES_LIST,
   },
-  serviceClientId: {
+  serviceClientId: { // ID of manager account
     type: String,
   },
-  active: {
-    type: Boolean,
-    default: false,
+  // TODO: Maybe this is needed?
+  // active: {
+  //   type: Boolean,
+  //   default: false,
+  // },
+  accessToken: {
+    type: String,
+    require: true,
+  },
+  refreshToken: {
+    type: String,
+  },
+  expiryDate: {
+    type: String,
   },
   dateUpdated: {
     type: Date,
     default: Date.now,
-  },
+  }
 });
 
 const activatedAdServices = new Schema({
@@ -30,7 +41,7 @@ const activatedAdServices = new Schema({
     required: true,
     enum: AD_SERVICES_LIST,
   },
-  serviceUserId: {
+  serviceUserId: { // ID of client ad account
     type: String,
     required: true,
   },
@@ -41,22 +52,15 @@ const activatedAdServices = new Schema({
   dateUpdated: {
     type: Date,
     default: Date.now,
-  },
-  // TODO: Maybe this will be needed?
-  // accessToken: {
-  //   type: String,
-  //   require: true,
-  // },
-  // refreshToken: {
-  //   type: String,
-  // }
+  }
 });
 
 const clientSchema = new Schema({
   name: {
     type: String,
     required: true,
-    unique: true
+    unique: true,
+    index: true
   },
   displayName: {
     type: String,
@@ -80,7 +84,8 @@ const userSchema = new Schema({
     type: String,
     lowercase: true,
     required: true,
-    unique: true
+    unique: true,
+    index: true
   },
   organizationName: {
     type: String,
@@ -109,6 +114,7 @@ const tenantSchema = new Schema({
     type: String,
     required: true,
     unique: true,
+    index: true,
     lowercase: true,
   },
   name: {
@@ -148,5 +154,20 @@ userSchema.methods.isValidPassword = async function (submittedPassword) {
 
 // Create a model
 const Tenant = mongoose.model('tenant', tenantSchema);
+
+
+// const newTenant = {
+//   name: 'John Smith Test Manager Acct',
+//   key: 'John Smith Test Manager Acct'.toLowerCase().split(' ').join('-'),
+//   users: [{
+//     givenName: 'Scott',
+//     familyName: 'Schaefer',
+//     email: 'scottschaef@gmail.com',
+//     passwordHash: 'easyPass',
+//     role: 'root'
+//   }]
+// }
+// Tenant.create(newTenant);
+
 
 module.exports = Tenant;
