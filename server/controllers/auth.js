@@ -1,7 +1,7 @@
-const JWT = require('jsonwebtoken');
+const JWT = require('jsonwebtoken')
 
 const signToken = ({ user, tenant }) => {
-  const { organizationName, id, email, givenName, familyName, role } = user;
+  const { organizationName, id, email, givenName, familyName, role } = user
   const data = {
     organizationName,
     id,
@@ -10,7 +10,7 @@ const signToken = ({ user, tenant }) => {
     familyName,
     role,
     tenant,
-  };
+  }
 
   const jwtSignOptions = {
     issuer: 'birmanAdmin',
@@ -18,26 +18,26 @@ const signToken = ({ user, tenant }) => {
     expiresIn: '24h'
   }
 
-  return JWT.sign(data, process.env.JWT_SECRET, jwtSignOptions);
-};
+  return JWT.sign(data, process.env.JWT_SECRET, jwtSignOptions)
+}
 
 const verifyBearer = authorization => {
-  const authorizationParts = authorization.split(' ');
+  const authorizationParts = authorization.split(' ')
   if (authorizationParts[0] === 'Bearer') {
     return authorizationParts[1]
   } else {
-    return false;
+    return false
   }
-};
+}
 
 module.exports = {
   login: async (req, res) => {
-    const { user } = req;
-    const { tenant } = req.value.body;
+    const { user } = req
+    const { tenant } = req.value.body
 
     // Generate token
-    const token = signToken({ user, tenant });
-    res.status(200).json({ token });
+    const token = signToken({ user, tenant })
+    res.status(200).json({ token })
   },
 
   // facebookOAuth: async (req, res) => {
@@ -47,17 +47,17 @@ module.exports = {
   // },
 
   secret: async (req, res) => {
-    res.status(200).json({ secret: 'resource' });
+    res.status(200).json({ secret: 'resource' })
   },
 
   verify: async (req, res, next) => {
     try {
-      const token = verifyBearer(req.headers.authorization);
+      const token = verifyBearer(req.headers.authorization)
       const payload = await JWT.verify(token, process.env.JWT_SECRET)
       req.payload = payload
       next()
     } catch (error) {
-      res.status(401).send({ error });
+      res.status(401).send({ error })
     }
   },
 
@@ -72,9 +72,9 @@ module.exports = {
       }
   
       if (!rolesAsString.includes(role)) {
-        return res.status(400).send(`This page is restricted to ${rolesAsString}s only`);
+        return res.status(400).send(`This page is restricted to ${rolesAsString}s only`)
       }
-      next();
+      next()
     }
   }
-};
+}

@@ -1,11 +1,11 @@
-const router = require('express-promise-router')();
-const passport = require('passport');
+const router = require('express-promise-router')()
+const passport = require('passport')
 
-const AuthController = require('../controllers/auth');
-const { validateBody, schemas } = require('../helpers/routeHelpers');
-require('../passport'); // require passport configuration
+const AuthController = require('../controllers/auth')
+const { validateBody, schemas } = require('../helpers/routeHelpers')
+require('../passport') // require passport configuration
 
-const passportLocal = passport.authenticate('local', { session: false });
+const passportLocal = passport.authenticate('local', { session: false })
 // const passportJWT = passport.authenticate('jwt', { session: false });
 // const passportGoogle = passport.authenticate(
 //   'google',
@@ -17,7 +17,7 @@ const passportLocal = passport.authenticate('local', { session: false });
 // );
 // const passportFacebook = passport.authenticate('facebook', { session: false });
 
-router.route('/login').post(validateBody(schemas.authSchema), passportLocal, AuthController.login);
+router.route('/login').post(validateBody(schemas.authSchema), passportLocal, AuthController.login)
 
 // router.route('/secret')
 //   .get(passportJWT, UsersController.secret);
@@ -34,4 +34,4 @@ router.route('/login').post(validateBody(schemas.authSchema), passportLocal, Aut
 // router.route('/oauth/facebook/callback')
 //   .get(passportFacebook, UsersController.facebookOAuth);
 
-module.exports = router;
+module.exports = router

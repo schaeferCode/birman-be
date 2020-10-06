@@ -1,18 +1,18 @@
-const Joi = require('joi');
+const Joi = require('joi')
 
 module.exports = {
   validateBody: (schema) => (req, res, next) => {
-    const result = Joi.validate(req.body, schema);
+    const result = Joi.validate(req.body, schema)
     if (result.error) {
-      return res.status(400).json(result.error);
+      return res.status(400).json(result.error)
     }
 
     if (!req.value) {
-      req.value = {};
+      req.value = {}
     }
     // put verified user and pass on req.value.body
-    req.value.body = result.value;
-    return next();
+    req.value.body = result.value
+    return next()
   },
 
   schemas: {

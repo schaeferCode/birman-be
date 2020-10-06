@@ -1,12 +1,33 @@
 module.exports = {
-  env: {
-    node: true,
+  'env': {
+    'commonjs': true,
+    'es2020': true,
+    'node': true
   },
-  extends: [
-    "eslint:recommended",
-    "plugin:node/recommended",
+  'extends': [
+    'eslint:recommended',
+    'plugin:node/recommended',
     'prettier',
   ],
-  rules: {
+  'parserOptions': {
+    'ecmaVersion': 11
   },
-};
+  'rules': {
+    'indent': [
+      'error',
+      2
+    ],
+    'linebreak-style': [
+      'error',
+      'unix'
+    ],
+    'quotes': [
+      'error',
+      'single'
+    ],
+    'semi': [
+      'error',
+      'never'
+    ]
+  }
+}

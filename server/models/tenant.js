@@ -1,9 +1,9 @@
-const mongoose = require('mongoose');
+const mongoose = require('mongoose')
 // const bcrypt = require('bcryptjs');
-const Schema = mongoose.Schema;
+const Schema = mongoose.Schema
 
-const AD_SERVICES_LIST = ['google', 'facebook'];
-const ROLES = ['tenant-admin', 'client-admin', 'user', 'root'];
+const AD_SERVICES_LIST = ['google', 'facebook']
+const ROLES = ['tenant-admin', 'client-admin', 'user', 'root']
 
 const adServicesSchema = new Schema({
   name: {
@@ -33,7 +33,7 @@ const adServicesSchema = new Schema({
     type: Date,
     default: Date.now,
   }
-});
+})
 
 const activatedAdServices = new Schema({
   name: {
@@ -53,7 +53,7 @@ const activatedAdServices = new Schema({
     type: Date,
     default: Date.now,
   }
-});
+})
 
 const clientSchema = new Schema({
   name: {
@@ -107,7 +107,7 @@ const userSchema = new Schema({
     type: Date,
     default: Date.now,
   },
-});
+})
 
 const tenantSchema = new Schema({
   key: {
@@ -130,7 +130,7 @@ const tenantSchema = new Schema({
   clients: {
     type: [clientSchema]
   }
-});
+})
 
 // TODO: re-enable after user things are stable...
 // userSchema.pre('save', async function (next) {
@@ -144,16 +144,16 @@ const tenantSchema = new Schema({
 // });
 
 userSchema.methods.isValidPassword = async function (submittedPassword) {
-  return this.passwordHash === submittedPassword;
+  return this.passwordHash === submittedPassword
   // try {
   //   return await bcrypt.compare(submittedPassword, this.passwordHash);
   // } catch (error) {
   //   throw new Error(error);
   // }
-};
+}
 
 // Create a model
-const Tenant = mongoose.model('tenant', tenantSchema);
+const Tenant = mongoose.model('tenant', tenantSchema)
 
 
 // const newTenant = {
@@ -170,4 +170,4 @@ const Tenant = mongoose.model('tenant', tenantSchema);
 // Tenant.create(newTenant);
 
 
-module.exports = Tenant;
+module.exports = Tenant
