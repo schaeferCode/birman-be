@@ -1,6 +1,5 @@
 const express = require('express')
 const morgan = require('morgan')
-const bodyParser = require('body-parser')
 const mongoose = require('mongoose')
 const cors = require('cors')
 
@@ -30,7 +29,7 @@ app.use(cors()) // TODO: Add whitelisted domains/ports
 if (!process.env.NODE_ENV === 'test') {
   app.use(morgan('dev'))
 }
-app.use(bodyParser.json())
+app.use(express.json())
 
 // Routes
 app.use('/auth', require('./routes/auth'))
