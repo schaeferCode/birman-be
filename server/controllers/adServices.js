@@ -10,7 +10,7 @@ const ADWORDS_API_VERSION = 'v201809'
 const googleAuthInstance = new AdwordsAuth({
   client_id: process.env.GOOGLE_CLIENT_ID, // app id located in google dev console
   client_secret: process.env.GOOGLE_CLIENT_SECRET, // app secret located in google dev console
-}, 'http://localhost:3000/ad-services/oauth/google/callback')
+}, `${process.env.SERVER_URL || 'http://localhost:3000'}/ad-services/oauth/google/callback`)
 
 // const client = new GoogleAdsApi({
 //   client_id: process.env.GOOGLE_CLIENT_ID,
