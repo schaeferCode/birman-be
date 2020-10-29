@@ -44,7 +44,6 @@ const userSchema = new Schema({
   tenantKey: { // the client of this app, e.g. 'eden-ads', 'online-marketing-wizards'
     type: String,
     lowercase: true,
-    required: true
   }
 })
 
@@ -88,7 +87,7 @@ const User = mongoose.model('user', userSchema)
 //   tenantKey: 'john-smith-test-manager-acct',
 // }
 
-// const newUserCollection = [rootUser, clientAdminUser]
+// const newUserCollection = [rootUser, tenantAdminUser]
 // User.create(newUserCollection)
 
 module.exports = User
