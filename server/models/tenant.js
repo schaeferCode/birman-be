@@ -1,9 +1,7 @@
 const mongoose = require('mongoose')
-// const bcrypt = require('bcryptjs');
 const Schema = mongoose.Schema
 
 const AD_SERVICES_LIST = ['google', 'facebook']
-const ROLES = ['tenant-admin', 'client-admin', 'user', 'root']
 
 const adServicesSchema = new Schema({
   name: {
@@ -21,7 +19,7 @@ const adServicesSchema = new Schema({
   // },
   accessToken: {
     type: String,
-    require: true,
+    required: true,
   },
   refreshToken: {
     type: String,
@@ -38,8 +36,8 @@ const adServicesSchema = new Schema({
 const activatedAdServices = new Schema({
   name: {
     type: String,
-    required: true,
     enum: AD_SERVICES_LIST,
+    required: true,
   },
   serviceUserId: { // ID of client ad account
     type: String,
@@ -56,124 +54,66 @@ const activatedAdServices = new Schema({
 })
 
 const clientSchema = new Schema({
-  name: {
-    type: String,
-    required: true,
-    unique: true,
-    index: true
-  },
-  displayName: {
-    type: String,
-    required: true
-  },
-  linkedAdServices: {
-    type: [activatedAdServices]
-  }
-})
-
-const userSchema = new Schema({
-  givenName: {
-    type: String,
-    required: true,
-  },
-  familyName: {
-    type: String,
-    required: true,
-  },
-  email: {
-    type: String,
-    lowercase: true,
-    required: true,
-    unique: true,
-    index: true
-  },
-  organizationName: {
-    type: String,
-  },
-  passwordHash: {
-    type: String,
-    required: true,
-  },
-  role: {
-    type: String,
-    required: true,
-    enum: ROLES,
-  },
   dateCreated: {
     type: Date,
-    default: Date.now,
+    default: Date.now
   },
   dateUpdated: {
     type: Date,
-    default: Date.now,
+    default: Date.now
+  },
+  key: {
+    type: String,
+    index: true,
+    lowercase: true,
+    required: true,
+    unique: true,
+  },
+  linkedAdServices: {
+    type: [activatedAdServices]
+  },
+  name: {
+    type: String,
+    required: true,
+    unique: true
   },
 })
 
 const tenantSchema = new Schema({
+  adServices: {
+    type: [adServicesSchema],
+  },
+  clients: {
+    type: [clientSchema]
+  },
+  dateCreated: {
+    type: Date,
+    default: Date.now
+  },
+  dateUpdated: {
+    type: Date,
+    default: Date.now
+  },
   key: {
     type: String,
-    required: true,
-    unique: true,
     index: true,
     lowercase: true,
+    required: true,
+    unique: true,
   },
   name: {
     type: String,
     required: true,
   },
-  adServices: {
-    type: [adServicesSchema],
-  },
-  users: {
-    type: [userSchema],
-  },
-  clients: {
-    type: [clientSchema]
-  }
 })
-
-// TODO: re-enable after user things are stable...
-// userSchema.pre('save', async function (next) {
-//   try {
-//     // Generate a password hash
-//     this.passwordHash = await bcrypt.hash(this.passwordHash, 10);
-//     next();
-//   } catch (error) {
-//     next(error);
-//   }
-// });
-
-userSchema.methods.isValidPassword = async function (submittedPassword) {
-  return this.passwordHash === submittedPassword
-  // try {
-  //   return await bcrypt.compare(submittedPassword, this.passwordHash);
-  // } catch (error) {
-  //   throw new Error(error);
-  // }
-}
 
 // Create a model
 const Tenant = mongoose.model('tenant', tenantSchema)
 
-
 // const newTenant = {
+//   key: 'john-smith-test-manager-acct',
 //   name: 'John Smith Test Manager Acct',
-//   key: 'John Smith Test Manager Acct'.toLowerCase().split(' ').join('-'),
-//   users: [{
-//     givenName: 'Scott',
-//     familyName: 'Schaefer',
-//     email: 'scottschaef@gmail.com',
-//     passwordHash: 'easyPass',
-//     role: 'root'
-//   },{
-//     givenName: 'Test',
-//     familyName: 'Admin',
-//     email: 'test@admin.com',
-//     passwordHash: 'easyPass',
-//     role: 'client-admin'
-//   }]
 // }
-// Tenant.create(newTenant);
-
+// Tenant.create(newTenant)
 
 module.exports = Tenant
