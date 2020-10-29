@@ -1,6 +1,5 @@
 const express = require('express')
 const morgan = require('morgan')
-const bodyParser = require('body-parser')
 const mongoose = require('mongoose')
 const cors = require('cors')
 
@@ -12,8 +11,15 @@ if (process.env.NODE_ENV === 'test') {
   mongoose.connect('mongodb://localhost/APIAuthenticationTEST', { useNewUrlParser: true, useUnifiedTopology: true })
   mongoose.set('useCreateIndex', true)
 } else {
-  mongoose.connect('mongodb://localhost/APIAuthentication', { useNewUrlParser: true, useUnifiedTopology: true })
-  mongoose.set('useCreateIndex', true)
+  const uri = `mongodb+srv://${process.env.MONGO_USER}:${process.env.MONGO_PASS}@cluster0.kcgmt.mongodb.net/${process.env.MONGO_DB_NAME}?retryWrites=true&w=majority`
+  mongoose
+    .connect(uri, { useNewUrlParser: true, useUnifiedTopology: true, useCreateIndex: true })
+    .then(() => {
+      console.log('DB connection successful')
+    })
+    .catch(err => {
+      console.log({err})
+    })
 }
 
 const app = express()
@@ -23,7 +29,7 @@ app.use(cors()) // TODO: Add whitelisted domains/ports
 if (!process.env.NODE_ENV === 'test') {
   app.use(morgan('dev'))
 }
-app.use(bodyParser.json())
+app.use(express.json())
 
 // Routes
 app.use('/auth', require('./routes/auth'))

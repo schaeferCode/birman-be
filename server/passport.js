@@ -15,7 +15,7 @@ passport.use(
     async (req, email, password, done) => {
       const { tenant } = req.value.body
       try {
-        const entity = await Tenant.findOne({ 'key': tenant, 'users.email': email }).exec()
+        const entity = await Tenant.findOne({ 'key': tenant }).exec()
         const user = entity.users.find((user) => user.email === email)
 
         // if not, handle that
@@ -30,6 +30,7 @@ passport.use(
         //return user
         done(null, user)
       } catch (error) {
+        console.log({ error })
         done(error, false)
       }
     }

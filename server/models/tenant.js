@@ -165,6 +165,12 @@ const Tenant = mongoose.model('tenant', tenantSchema)
 //     email: 'scottschaef@gmail.com',
 //     passwordHash: 'easyPass',
 //     role: 'root'
+//   },{
+//     givenName: 'Test',
+//     familyName: 'Admin',
+//     email: 'test@admin.com',
+//     passwordHash: 'easyPass',
+//     role: 'client-admin'
 //   }]
 // }
 // Tenant.create(newTenant);
