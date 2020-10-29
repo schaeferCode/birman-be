@@ -4,7 +4,6 @@ const mongoose = require('mongoose')
 const cors = require('cors')
 
 // const bizSdk = require('facebook-nodejs-business-sdk');
-// var cors = require('cors');
 
 if (process.env.NODE_ENV === 'test') {
   // TODO: Create unit tests
