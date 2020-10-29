@@ -3,20 +3,17 @@ const { Strategy: LocalStrategy } = require('passport-local')
 const { OAuth2Strategy: GoogleStrategy } = require('passport-google-oauth')
 // var { Strategy: FacebookStrategy } = require('passport-facebook');
 
-const Tenant = require('./models/tenant')
+const User = require('./models/user')
 
 // Local Strategy
 passport.use(
   new LocalStrategy(
     {
       usernameField: 'email',
-      passReqToCallback: true,
     },
-    async (req, email, password, done) => {
-      const { tenant } = req.value.body
+    async (email, password, done) => {
       try {
-        const entity = await Tenant.findOne({ 'key': tenant }).exec()
-        const user = entity.users.find((user) => user.email === email)
+        const user = await User.findOne({ 'email': email }).exec()
 
         // if not, handle that
         if (!user) return done(null, false)
