@@ -37,10 +37,11 @@ module.exports = {
       role: Joi.string(),
     }),
     batchUserCreationSchema: Joi.object({ users: Joi.object().pattern(Joi.number(), Joi.object({
+      clientKey: Joi.string().required(),
+      clientName: Joi.string().required(),
       email: Joi.string().required(),
       familyName: Joi.string().required(),
       givenName: Joi.string().required(),
-      name: Joi.string().required(),
       selected: Joi.bool(),
     }))})
   }

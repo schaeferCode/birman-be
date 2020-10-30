@@ -2,6 +2,7 @@ const generator = require('generate-password')
 const _ = require('lodash/core')
 
 const Tenant = require('../models/tenant')
+const User = require('../models/user')
 
 module.exports = {
   createUser: async (req, res) => {
@@ -42,35 +43,39 @@ module.exports = {
   },
 
   batchUserCreation: async (req, res) => {
-    const { tenant } = req.payload
+    const { tenantKey } = req.payload
     const { users } = req.value.body
     // find tenant
-    const entity = await Tenant.findOne({key: tenant }).exec()
+    const entity = await Tenant.findOne({key: tenantKey }).exec()
     // iterate through submitted userList
-    const updatedTenant = _.reduce(users, (updatedEntity, user, userId) => {
-      const { email, familyName, givenName, name } = user
-      const newDbUser = {
-        email: email.toLowerCase(),
+    const newUsersList = _.reduce(users, (usersList, { clientKey, email, familyName, givenName, tenantKey }) => {
+      usersList.push({
+        clientKey,
+        email,
         familyName,
         givenName,
-        organizationName: name.toLowerCase(),
-        passwordHash: generator.generate(),
         role: 'client-admin',
-      }
+        tenantKey
+      })
+      return usersList
+    }, [])
+
+    const updatedTenant = _.reduce(users, (updatedEntity, { clientName, clientKey,  }, userId) => {
       const newDbClient = {
-        name: name.toLowerCase(),
-        displayName: name,
+        key: clientKey,
         linkedAdServices: [{
           name: 'google', // TODO: fix hardcode
           serviceUserId: userId,
           active: true
-        }]
+        }],
+        name: clientName
       }
-      updatedEntity.users.push(newDbUser)
       updatedEntity.clients.push(newDbClient)
       return updatedEntity
     }, entity)
+    
+    await User.create(newUsersList)
     await updatedTenant.save()
-    res.status(200).json({ updatedTenant })
+    res.status(200).json({ User })
   }
 }
