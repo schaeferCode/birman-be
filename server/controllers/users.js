@@ -51,9 +51,10 @@ module.exports = {
     const newUsersList = _.reduce(users, (usersList, { clientKey, email, familyName, givenName, tenantKey }) => {
       usersList.push({
         clientKey,
-        email,
+        email: email.toLowerCase(),
         familyName,
         givenName,
+        passwordHash: generator.generate(),
         role: 'client-admin',
         tenantKey
       })
@@ -73,7 +74,7 @@ module.exports = {
       updatedEntity.clients.push(newDbClient)
       return updatedEntity
     }, entity)
-    
+
     await User.create(newUsersList)
     await updatedTenant.save()
     res.status(200).json({ User })
