@@ -13,6 +13,6 @@ router.route('/edit')
   .post(AuthController.verify, AuthController.verifyRole(VALID_ROLES), validateBody(schemas.editUserSchema), UsersController.editUser)
 
 router.route('/batch-user-creation')
-  .post(AuthController.verify, AuthController.verifyRole(['tenant-admin', 'root']), validateBody(schemas.batchUserCreationSchema), UsersController.batchUserCreation)
+  .post(AuthController.verify, AuthController.verifyRole(['tenant-admin']), validateBody(schemas.batchUserCreationSchema), UsersController.batchUserCreation)
 
 module.exports = router
