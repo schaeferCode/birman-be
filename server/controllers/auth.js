@@ -2,7 +2,7 @@ const JWT = require('jsonwebtoken')
 
 const signToken = ({ user, tenant }) => {
   const { organizationName, id, email, givenName, familyName, role } = user
-  const data = {
+  const payload = {
     organizationName,
     id,
     email,
@@ -15,10 +15,10 @@ const signToken = ({ user, tenant }) => {
   const jwtSignOptions = {
     issuer: 'birmanAdmin',
     subject: user.id,
-    expiresIn: '24h'
+    expiresIn: '1d'
   }
 
-  return JWT.sign(data, process.env.JWT_SECRET, jwtSignOptions)
+  return JWT.sign(payload, process.env.JWT_SECRET, jwtSignOptions)
 }
 
 const verifyBearer = authorization => {
