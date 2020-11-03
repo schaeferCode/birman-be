@@ -17,11 +17,11 @@ module.exports = {
 
   schemas: {
     authSchema: Joi.object().keys({
-      email: Joi.string().email().required(),
+      email: Joi.string().email().required().lowercase(),
       password: Joi.string().required(),
     }),
     newUserSchema: Joi.object().keys({
-      email: Joi.string().email().required(),
+      email: Joi.string().email().required().lowercase(),
       familyName: Joi.string().required(),
       givenName: Joi.string().required(),
       organizationName: Joi.string(),
@@ -30,16 +30,15 @@ module.exports = {
       tenant: Joi.string().required(),
     }),
     editUserSchema: Joi.object().keys({
-      email: Joi.string().required(),
+      email: Joi.string().required().lowercase(),
       familyName: Joi.string(),
       givenName: Joi.string(),
       organizationName: Joi.string(),
       role: Joi.string(),
     }),
     batchUserCreationSchema: Joi.object({ users: Joi.object().pattern(Joi.number(), Joi.object({
-      clientKey: Joi.string().required(),
       clientName: Joi.string().required(),
-      email: Joi.string().required(),
+      email: Joi.string().required().lowercase(),
       familyName: Joi.string().required(),
       givenName: Joi.string().required(),
       selected: Joi.bool(),

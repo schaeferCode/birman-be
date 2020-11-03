@@ -47,11 +47,12 @@ module.exports = {
     const { users } = req.value.body
     // find tenant
     const entity = await Tenant.findOne({key: tenantKey }).exec()
-    // iterate through submitted userList
-    const newUsersList = _.reduce(users, (usersList, { clientKey, email, familyName, givenName, tenantKey }) => {
+
+    // iterate through submitted userList and create new users and new clients
+    const newUsersList = _.reduce(users, (usersList, { clientName, email, familyName, givenName, tenantKey }) => {
       usersList.push({
-        clientKey,
-        email: email.toLowerCase(),
+        clientKey: clientName.toLowerCase(),
+        email,
         familyName,
         givenName,
         passwordHash: generator.generate(),
@@ -60,10 +61,9 @@ module.exports = {
       })
       return usersList
     }, [])
-
-    const updatedTenant = _.reduce(users, (updatedEntity, { clientName, clientKey,  }, userId) => {
+    const updatedTenant = _.reduce(users, (updatedEntity, { clientName,  }, userId) => {
       const newDbClient = {
-        key: clientKey,
+        key: clientName.toLowerCase(),
         linkedAdServices: [{
           name: 'google', // TODO: fix hardcode
           serviceUserId: userId,

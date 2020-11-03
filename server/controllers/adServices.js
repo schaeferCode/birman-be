@@ -4,6 +4,7 @@ const neatCsv = require('neat-csv')
 
 const { googleGetAccessTokenFromAuthorizationCode, googleGetReport, googleGetRequest } = require('../helpers/serviceHelpers')
 const Tenant = require('../models/tenant')
+const User = require('../models/user')
 
 const ADWORDS_API_VERSION = 'v201809'
 
@@ -22,9 +23,9 @@ module.exports = {
   authenticateGoogleUser: async (req, res) => {
     try {
       const { access_token, refresh_token, expiry_date } = await googleGetAccessTokenFromAuthorizationCode(googleAuthInstance, req.query.code)
-      const { tenant } = JSON.parse(req.query.state)
+      const { tenantKey } = JSON.parse(req.query.state)
 
-      const entity = await Tenant.findOne({key: tenant }).exec()
+      const entity = await Tenant.findOne({key: tenantKey }).exec()
       const adService = entity.adServices.find(adService => adService.name === 'google') // TODO: fix hardcode
       if (adService) {
         adService.accessToken = access_token
@@ -58,10 +59,10 @@ module.exports = {
         entity.adServices.push(newAdService)
         await entity.save()
       }
-      res.redirect('http://localhost:8000/user-administration/')
+      res.redirect(`${process.env.FRONTEND_URL || 'http://localhost:8000'}/user-administration/`)
     } catch (error) {
       console.log({error})
-      res.redirect('http://localhost:8000')
+      res.redirect(`${process.env.FRONTEND_URL || 'http://localhost:8000'}`)
     }
   },
 
@@ -109,9 +110,11 @@ module.exports = {
   },
 
   getSubAccounts: async (req, res) => {
-    const { tenant } = req.payload
+    const { tenantKey } = req.payload
+    // get all users
+    const allUsers = await User.find().lean()
     // get refresh and access tokens from tenant
-    const entity = await Tenant.findOne({ key: tenant }).lean()
+    const entity = await Tenant.findOne({ key: tenantKey }).lean()
     const { refreshToken, accessToken, serviceClientId } = entity.adServices.find(adService => adService.name === 'google') // TODO: handle hardcode
 
     try {
@@ -135,11 +138,17 @@ module.exports = {
         // filter manager accounts
         if (subAccount.canManageClients) return updatedSubAccounts
         // find subaccounts that exists as users and mark them as such
-        const existingUser = entity.users.find(user => {
-          return user.organizationName === subAccount.name.toLowerCase()
+        const existingClient = entity.clients.find(client => {
+          return client.key === subAccount.name.toLowerCase()
         })
-
-        updatedSubAccounts.push(Object.assign(subAccount, existingUser, { active: !!existingUser }))
+        const modifiedSubAccount = Object.assign(subAccount, existingClient, { active: !!existingClient })
+        if (existingClient) {
+          const { email, familyName, givenName } = allUsers.find(user => user.clientKey === existingClient.key)
+          modifiedSubAccount.email = email
+          modifiedSubAccount.familyName = familyName
+          modifiedSubAccount.givenName = givenName
+        }
+        updatedSubAccounts.push(modifiedSubAccount)
         return updatedSubAccounts
       }, [])
       res.status(200).send({ subAccounts: updatedSubAccounts })
@@ -154,7 +163,7 @@ module.exports = {
       access_type: 'offline',
       prompt: 'consent',
       scope: 'https://www.googleapis.com/auth/adwords',
-      state: JSON.stringify({ tenant: req.payload.tenant })
+      state: JSON.stringify({ tenantKey: req.payload.tenantKey })
     })
     res.json({
       redirectUrl: URL
