@@ -143,10 +143,13 @@ module.exports = {
         })
         const modifiedSubAccount = Object.assign(subAccount, existingClient, { active: !!existingClient })
         if (existingClient) {
-          const { email, familyName, givenName } = allUsers.find(user => user.clientKey === existingClient.key)
-          modifiedSubAccount.email = email
-          modifiedSubAccount.familyName = familyName
-          modifiedSubAccount.givenName = givenName
+          const existingUser = allUsers.find(user => user.clientKey === existingClient.key)
+          if (existingUser) {
+            const { email, familyName, givenName } = existingUser
+            modifiedSubAccount.email = email
+            modifiedSubAccount.familyName = familyName
+            modifiedSubAccount.givenName = givenName
+          }
         }
         updatedSubAccounts.push(modifiedSubAccount)
         return updatedSubAccounts
