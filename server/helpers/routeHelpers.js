@@ -2,7 +2,7 @@ const Joi = require('joi')
 
 module.exports = {
   validateBody: (schema) => (req, res, next) => {
-    const result = Joi.validate(req.body, schema)
+    const result = schema.validate(req.body)
     if (result.error) {
       return res.status(400).json(result.error)
     }
