@@ -4,7 +4,8 @@ module.exports = {
   validateBody: (schema) => (req, res, next) => {
     const result = schema.validate(req.body)
     if (result.error) {
-      return res.status(400).json(result.error)
+      console.log('errro', result)
+      return res.status(200).json(result.error)
     }
 
     if (!req.value) {
@@ -24,10 +25,7 @@ module.exports = {
       email: Joi.string().email().required().lowercase(),
       familyName: Joi.string().required(),
       givenName: Joi.string().required(),
-      organizationName: Joi.string(),
-      password: Joi.string().required(),
-      role: Joi.string().valid('tenant-admin', 'client-admin', 'user', 'root').default('user'),
-      tenant: Joi.string().required(),
+      role: Joi.string().valid('tenant-admin', 'client-admin', 'user', 'root').required(),
     }),
     editUserSchema: Joi.object().keys({
       email: Joi.string().required().lowercase(),
