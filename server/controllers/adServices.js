@@ -7,6 +7,7 @@ const Tenant = require('../models/tenant')
 const User = require('../models/user')
 
 const ADWORDS_API_VERSION = 'v201809'
+const USER_AGENT = 'Birman'
 
 const googleAuthInstance = new AdwordsAuth({
   client_id: process.env.GOOGLE_CLIENT_ID, // app id located in google dev console
@@ -39,7 +40,7 @@ module.exports = {
           client_secret: process.env.GOOGLE_CLIENT_SECRET,
           developerToken: process.env.GOOGLE_DEV_TOKEN,
           refresh_token: refresh_token,
-          userAgent: 'Birman'
+          userAgent: USER_AGENT
         })
     
         // get manager account id (AKA serviceClientId and clientCustomerId)
@@ -66,6 +67,27 @@ module.exports = {
     }
   },
 
+  getAllClients: async (req,res) => {
+    const { tenantKey } = req.payload
+
+    // get access and refresh tokens
+    const entity = Tenant.findOne({ key: tenantKey }).lean()
+    const { accessToken, refreshToken } = entity.adServices.find(({ name }) => name === 'google')
+
+    // use customerService to get and return all client accounts
+    const adWordsUser = new AdwordsUser({
+      access_token: accessToken,
+      client_id: process.env.GOOGLE_CLIENT_ID,
+      client_secret: process.env.GOOGLE_CLIENT_SECRET,
+      developerToken: process.env.GOOGLE_DEV_TOKEN,
+      refresh_token: refreshToken,
+      userAgent: USER_AGENT
+    })
+    const customerService = adWordsUser.getService('CustomerService', ADWORDS_API_VERSION)
+    const allClients = await googleGetRequest(customerService, 'getCustomers')
+    res.status(200).send({ allClients })
+  },
+
   getGoogleAdMetrics: async (req, res) => {
     const { tenant, organizationName } = req.payload
     // get refresh and access tokens from tenant
@@ -84,7 +106,7 @@ module.exports = {
         client_secret: process.env.GOOGLE_CLIENT_SECRET,
         developerToken: process.env.GOOGLE_DEV_TOKEN,
         refresh_token: refreshToken,
-        userAgent: 'Birman'
+        userAgent: USER_AGENT
       })
 
       const reportOptions = {
@@ -125,7 +147,7 @@ module.exports = {
         clientCustomerId: serviceClientId,
         developerToken: process.env.GOOGLE_DEV_TOKEN,
         refresh_token: refreshToken,
-        userAgent: 'Birman'
+        userAgent: USER_AGENT
       })
       // get all sub accounts
       const managedCustomerService = adWordsUser.getService('ManagedCustomerService', ADWORDS_API_VERSION)
