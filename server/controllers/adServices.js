@@ -26,7 +26,7 @@ module.exports = {
       const { access_token, refresh_token, expiry_date } = await googleGetAccessTokenFromAuthorizationCode(googleAuthInstance, req.query.code)
       const { tenantKey } = JSON.parse(req.query.state)
 
-      const entity = await Tenant.findOne({key: tenantKey }).exec()
+      const entity = await Tenant.findOne({ key: tenantKey }).exec()
       const adService = entity.adServices.find(adService => adService.name === 'google') // TODO: fix hardcode
       if (adService) {
         adService.accessToken = access_token
@@ -71,21 +71,27 @@ module.exports = {
     const { tenantKey } = req.payload
 
     // get access and refresh tokens
-    const entity = Tenant.findOne({ key: tenantKey }).lean()
-    const { accessToken, refreshToken } = entity.adServices.find(({ name }) => name === 'google')
+    const entity = await Tenant.findOne({ key: tenantKey }).lean()
+    const { accessToken, refreshToken, serviceClientId } = entity.adServices.find(({ name }) => name === 'google')
 
-    // use customerService to get and return all client accounts
+    // use ManagedCustomerService to get and return all client accounts
     const adWordsUser = new AdwordsUser({
       access_token: accessToken,
       client_id: process.env.GOOGLE_CLIENT_ID,
       client_secret: process.env.GOOGLE_CLIENT_SECRET,
+      clientCustomerId: serviceClientId,
       developerToken: process.env.GOOGLE_DEV_TOKEN,
       refresh_token: refreshToken,
       userAgent: USER_AGENT
     })
-    const customerService = adWordsUser.getService('CustomerService', ADWORDS_API_VERSION)
-    const allClients = await googleGetRequest(customerService, 'getCustomers')
-    res.status(200).send({ allClients })
+    const managedCustomerService = adWordsUser.getService('ManagedCustomerService', ADWORDS_API_VERSION)
+    const { entries: allClients} = await googleGetRequest(managedCustomerService, 'get', {
+      serviceSelector: {
+        fields: ['TestAccount', 'AccountLabels', 'Name', 'CustomerId', 'CanManageClients']
+      }
+    })
+    const result = allClients.filter(account => !account.canManageClients)
+    res.status(200).send({ result })
   },
 
   getGoogleAdMetrics: async (req, res) => {
