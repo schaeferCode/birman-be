@@ -3,6 +3,7 @@ const _ = require('lodash/core')
 
 const Tenant = require('../models/tenant')
 const User = require('../models/user')
+const { convertToKey } = require('../utilities')
 
 module.exports = {
   createUser: async (req, res) => {
@@ -46,7 +47,7 @@ module.exports = {
     // iterate through submitted userList and create new users and new clients
     const newUsersList = _.reduce(users, (usersList, { clientName, email, familyName, givenName, tenantKey }) => {
       usersList.push({
-        clientKey: clientName.toLowerCase(),
+        clientKey: convertToKey(clientName),
         email,
         familyName,
         givenName,
@@ -58,7 +59,7 @@ module.exports = {
     }, [])
     const updatedTenant = _.reduce(users, (updatedEntity, { clientName,  }, userId) => {
       const newDbClient = {
-        key: clientName.toLowerCase(),
+        key: convertToKey(clientName),
         linkedAdServices: [{
           name: 'google', // TODO: fix hardcode
           serviceUserId: userId,

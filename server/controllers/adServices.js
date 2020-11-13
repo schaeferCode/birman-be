@@ -5,6 +5,7 @@ const neatCsv = require('neat-csv')
 const { googleGetAccessTokenFromAuthorizationCode, googleGetReport, googleGetRequest } = require('../helpers/serviceHelpers')
 const Tenant = require('../models/tenant')
 const User = require('../models/user')
+const { convertToKey } = require('../utilities')
 
 const ADWORDS_API_VERSION = 'v201809'
 const USER_AGENT = 'Birman'
@@ -85,13 +86,24 @@ module.exports = {
       userAgent: USER_AGENT
     })
     const managedCustomerService = adWordsUser.getService('ManagedCustomerService', ADWORDS_API_VERSION)
-    const { entries: allClients} = await googleGetRequest(managedCustomerService, 'get', {
+    let { entries: allClients} = await googleGetRequest(managedCustomerService, 'get', {
       serviceSelector: {
         fields: ['TestAccount', 'AccountLabels', 'Name', 'CustomerId', 'CanManageClients']
       }
     })
-    const result = allClients.filter(account => !account.canManageClients)
-    res.status(200).send(result)
+    allClients = allClients
+      .filter(account => !account.canManageClients)
+      
+
+    // mark clients that already exist in DB
+    allClients = allClients.map(account => {
+      const foundClient = entity.clients.find(({ key }) => key === convertToKey(account.name))
+      if (foundClient) {
+        return { ...account, active: true }
+      }
+      return account
+    })
+    res.status(200).send(allClients)
   },
 
   getGoogleAdMetrics: async (req, res) => {
@@ -167,7 +179,7 @@ module.exports = {
         if (subAccount.canManageClients) return updatedSubAccounts
         // find subaccounts that exists as users and mark them as such
         const existingClient = entity.clients.find(client => {
-          return client.key === subAccount.name.toLowerCase()
+          return client.key === convertToKey(subAccount.name)
         })
         const modifiedSubAccount = Object.assign(subAccount, existingClient, { active: !!existingClient })
         if (existingClient) {
