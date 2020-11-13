@@ -91,7 +91,7 @@ module.exports = {
       }
     })
     const result = allClients.filter(account => !account.canManageClients)
-    res.status(200).send({ result })
+    res.status(200).send(result)
   },
 
   getGoogleAdMetrics: async (req, res) => {
