@@ -7,13 +7,21 @@ const { convertToKey } = require('../utilities')
 
 module.exports = {
   createUser: async (req, res) => {
-    const { email, role, givenName, familyName } = req.value.body
+    const { clientName, email, role, givenName, familyName, serviceUserId } = req.value.body
     const { tenantKey } = req.payload
 
     // check if account already exists
     const foundUser = await User.findOne({ email }).lean()
     if (foundUser) {
       return res.status(403).send({ error: 'User already exists' })
+    }
+
+    const clientKey = convertToKey(clientName)
+
+    const entity = await Tenant.findOne({ key: tenantKey }).exec()
+    const foundClient = entity.clients.find(client => client.key === clientKey)
+    if (foundClient) {
+      return res.status(403).send({ error: 'Client already exists' })
     }
 
     const newUser = {
@@ -25,8 +33,20 @@ module.exports = {
       tenantKey
     }
     User.create(newUser)
+
+    const newClient = {
+      key: clientKey,
+      linkedAdServices: [{
+        name: 'google',
+        serviceUserId,
+        active: true
+      }],
+      name: clientName
+    }
+    entity.clients.push(newClient)
+    entity.save()
     
-    res.sendStatus(200) //TODO: figure out what to send back
+    res.sendStatus(200)
   },
 
   editUser: async (req, res) => {
@@ -73,6 +93,6 @@ module.exports = {
 
     await User.create(newUsersList)
     await updatedTenant.save()
-    res.status(200).json({ User })
+    res.sendStatus(200)
   }
 }
