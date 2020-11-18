@@ -22,10 +22,18 @@ module.exports = {
       password: Joi.string().required(),
     }),
     newUserSchema: Joi.object().keys({
+      clientName: Joi.when('role', {
+        is: Joi.string().valid('client-admin', 'user'),
+        then: Joi.string().required()
+      }),
       email: Joi.string().email().required().lowercase(),
       familyName: Joi.string().required(),
       givenName: Joi.string().required(),
       role: Joi.string().valid('tenant-admin', 'client-admin', 'user', 'root').required(),
+      serviceUserId: Joi.when('role', {
+        is: Joi.string().valid('client-admin'),
+        then: Joi.string().required()
+      })
     }),
     editUserSchema: Joi.object().keys({
       email: Joi.string().required().lowercase(),
