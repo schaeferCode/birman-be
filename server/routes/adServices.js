@@ -15,4 +15,7 @@ router.route('/get-google-ads-metrics')
 router.route('/get-sub-accounts')
   .get(AuthController.verify, AuthController.verifyRole(['tenant-admin', 'root']), AdServicesController.getSubAccounts)
 
+router.route('/get-all-clients')
+  .get(AuthController.verify, AuthController.verifyRole([['tenant-admin']]), AdServicesController.getAllClients)
+
 module.exports = router

@@ -5,8 +5,10 @@ const neatCsv = require('neat-csv')
 const { googleGetAccessTokenFromAuthorizationCode, googleGetReport, googleGetRequest } = require('../helpers/serviceHelpers')
 const Tenant = require('../models/tenant')
 const User = require('../models/user')
+const { convertToKey } = require('../utilities')
 
 const ADWORDS_API_VERSION = 'v201809'
+const USER_AGENT = 'Birman'
 
 const googleAuthInstance = new AdwordsAuth({
   client_id: process.env.GOOGLE_CLIENT_ID, // app id located in google dev console
@@ -25,7 +27,7 @@ module.exports = {
       const { access_token, refresh_token, expiry_date } = await googleGetAccessTokenFromAuthorizationCode(googleAuthInstance, req.query.code)
       const { tenantKey } = JSON.parse(req.query.state)
 
-      const entity = await Tenant.findOne({key: tenantKey }).exec()
+      const entity = await Tenant.findOne({ key: tenantKey }).exec()
       const adService = entity.adServices.find(adService => adService.name === 'google') // TODO: fix hardcode
       if (adService) {
         adService.accessToken = access_token
@@ -39,7 +41,7 @@ module.exports = {
           client_secret: process.env.GOOGLE_CLIENT_SECRET,
           developerToken: process.env.GOOGLE_DEV_TOKEN,
           refresh_token: refresh_token,
-          userAgent: 'Birman'
+          userAgent: USER_AGENT
         })
     
         // get manager account id (AKA serviceClientId and clientCustomerId)
@@ -66,6 +68,44 @@ module.exports = {
     }
   },
 
+  getAllClients: async (req,res) => {
+    const { tenantKey } = req.payload
+
+    // get access and refresh tokens
+    const entity = await Tenant.findOne({ key: tenantKey }).lean()
+    const { accessToken, refreshToken, serviceClientId } = entity.adServices.find(({ name }) => name === 'google')
+
+    // use ManagedCustomerService to get and return all client accounts
+    const adWordsUser = new AdwordsUser({
+      access_token: accessToken,
+      client_id: process.env.GOOGLE_CLIENT_ID,
+      client_secret: process.env.GOOGLE_CLIENT_SECRET,
+      clientCustomerId: serviceClientId,
+      developerToken: process.env.GOOGLE_DEV_TOKEN,
+      refresh_token: refreshToken,
+      userAgent: USER_AGENT
+    })
+    const managedCustomerService = adWordsUser.getService('ManagedCustomerService', ADWORDS_API_VERSION)
+    let { entries: allClients} = await googleGetRequest(managedCustomerService, 'get', {
+      serviceSelector: {
+        fields: ['TestAccount', 'AccountLabels', 'Name', 'CustomerId', 'CanManageClients']
+      }
+    })
+    allClients = allClients
+      .filter(account => !account.canManageClients)
+      
+
+    // mark clients that already exist in DB
+    allClients = allClients.map(account => {
+      const foundClient = entity.clients.find(({ key }) => key === convertToKey(account.name))
+      if (foundClient) {
+        return { ...account, active: true }
+      }
+      return account
+    })
+    res.status(200).send(allClients)
+  },
+
   getGoogleAdMetrics: async (req, res) => {
     const { tenant, organizationName } = req.payload
     // get refresh and access tokens from tenant
@@ -84,7 +124,7 @@ module.exports = {
         client_secret: process.env.GOOGLE_CLIENT_SECRET,
         developerToken: process.env.GOOGLE_DEV_TOKEN,
         refresh_token: refreshToken,
-        userAgent: 'Birman'
+        userAgent: USER_AGENT
       })
 
       const reportOptions = {
@@ -125,7 +165,7 @@ module.exports = {
         clientCustomerId: serviceClientId,
         developerToken: process.env.GOOGLE_DEV_TOKEN,
         refresh_token: refreshToken,
-        userAgent: 'Birman'
+        userAgent: USER_AGENT
       })
       // get all sub accounts
       const managedCustomerService = adWordsUser.getService('ManagedCustomerService', ADWORDS_API_VERSION)
@@ -139,7 +179,7 @@ module.exports = {
         if (subAccount.canManageClients) return updatedSubAccounts
         // find subaccounts that exists as users and mark them as such
         const existingClient = entity.clients.find(client => {
-          return client.key === subAccount.name.toLowerCase()
+          return client.key === convertToKey(subAccount.name)
         })
         const modifiedSubAccount = Object.assign(subAccount, existingClient, { active: !!existingClient })
         if (existingClient) {
