@@ -4,7 +4,6 @@ module.exports = {
   validateBody: (schema) => (req, res, next) => {
     const result = schema.validate(req.body)
     if (result.error) {
-      console.log('errro', result)
       return res.status(200).json(result.error)
     }
 
@@ -28,6 +27,12 @@ module.exports = {
       givenName: Joi.string().required(),
       role: Joi.string().valid('client-admin').required(),
       serviceUserId: Joi.string().required()
+    }),
+    newClientUserSchema: Joi.object().keys({
+      email: Joi.string().email().required().lowercase(),
+      familyName: Joi.string().required(),
+      givenName: Joi.string().required(),
+      role: Joi.string().valid('user').required(),
     }),
     newTenantAdminSchema: Joi.object().keys({
       email: Joi.string().email().required().lowercase(),
