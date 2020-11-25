@@ -9,6 +9,7 @@ module.exports = {
   createClientAdmin: async (req, res) => {
     const { clientName, email, familyName, givenName, role, serviceUserId } = req.value.body
     const { tenantKey } = req.payload
+    const clientKey = convertToKey(clientName)
 
     // check if account already exists
     const foundUser = await User.findOne({ email }).lean()
@@ -17,6 +18,7 @@ module.exports = {
     }
 
     const newUser = {
+      clientKey,
       email,
       familyName,
       givenName,
@@ -26,7 +28,6 @@ module.exports = {
     }
     User.create(newUser)
 
-    const clientKey = convertToKey(clientName)
     const entity = await Tenant.findOne({ key: tenantKey }).exec()
     const foundClient = entity.clients.find(client => client.key === clientKey)
     if (!foundClient) {

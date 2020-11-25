@@ -15,7 +15,10 @@ const userSchema = new Schema({
   },
   clientKey: { // if role is 'user' or 'client-admin', this is the company they work for, e.g. 'ez-dental'
     type: String,
-    lowercase: true
+    lowercase: true,
+    required: function () {
+      return ['client-admin', 'user'].includes(this.role)
+    }
   },
   email: {
     type: String,
@@ -44,6 +47,9 @@ const userSchema = new Schema({
   tenantKey: { // the client of this app, e.g. 'eden-ads', 'online-marketing-wizards'
     type: String,
     lowercase: true,
+    required: function () {
+      return this.role === 'root'
+    }
   }
 })
 
