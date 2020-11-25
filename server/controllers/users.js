@@ -6,22 +6,14 @@ const User = require('../models/user')
 const { convertToKey } = require('../utilities')
 
 module.exports = {
-  createUser: async (req, res) => {
-    const { clientName, email, role, givenName, familyName, serviceUserId } = req.value.body
+  createClientAdmin: async (req, res) => {
+    const { clientName, email, familyName, givenName, role, serviceUserId } = req.value.body
     const { tenantKey } = req.payload
 
     // check if account already exists
     const foundUser = await User.findOne({ email }).lean()
     if (foundUser) {
       return res.status(403).send({ error: 'User already exists' })
-    }
-
-    const clientKey = convertToKey(clientName)
-
-    const entity = await Tenant.findOne({ key: tenantKey }).exec()
-    const foundClient = entity.clients.find(client => client.key === clientKey)
-    if (foundClient) {
-      return res.status(403).send({ error: 'Client already exists' })
     }
 
     const newUser = {
@@ -34,17 +26,22 @@ module.exports = {
     }
     User.create(newUser)
 
-    const newClient = {
-      key: clientKey,
-      linkedAdServices: [{
-        name: 'google',
-        serviceUserId,
-        active: true
-      }],
-      name: clientName
+    const clientKey = convertToKey(clientName)
+    const entity = await Tenant.findOne({ key: tenantKey }).exec()
+    const foundClient = entity.clients.find(client => client.key === clientKey)
+    if (!foundClient) {
+      const newClient = {
+        key: clientKey,
+        linkedAdServices: [{
+          name: 'google',
+          serviceUserId,
+          active: true
+        }],
+        name: clientName
+      }
+      entity.clients.push(newClient)
+      entity.save()
     }
-    entity.clients.push(newClient)
-    entity.save()
     
     res.sendStatus(200)
   },
