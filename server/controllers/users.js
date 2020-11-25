@@ -47,6 +47,29 @@ module.exports = {
     res.sendStatus(200)
   },
 
+  createTenantAdmin: async (req, res) => {
+    const { email, familyName, givenName, role } = req.value.body
+    const { tenantKey } = req.payload
+
+    // check if account already exists
+    const foundUser = await User.findOne({ email }).lean()
+    if (foundUser) {
+      return res.status(403).send({ error: 'User already exists' })
+    }
+
+    const newUser = {
+      email,
+      familyName,
+      givenName,
+      passwordHash: generator.generate(),
+      role,
+      tenantKey
+    }
+    User.create(newUser)
+    
+    res.sendStatus(200)
+  },
+
   editUser: async (req, res) => {
     const { tenant } = req.payload
     const { role, givenName, familyName, email } = req.value.body

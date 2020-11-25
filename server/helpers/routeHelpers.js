@@ -29,6 +29,12 @@ module.exports = {
       role: Joi.string().valid('client-admin').required(),
       serviceUserId: Joi.string().required()
     }),
+    newTenantAdminSchema: Joi.object().keys({
+      email: Joi.string().email().required().lowercase(),
+      familyName: Joi.string().required(),
+      givenName: Joi.string().required(),
+      role: Joi.string().valid('tenant-admin').required()
+    }),
     newUserSchema: Joi.object().keys({
       clientName: Joi.when('role', {
         is: Joi.string().valid('client-admin', 'user'),
