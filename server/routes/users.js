@@ -53,8 +53,8 @@ router.route('/tenant-admin/create-tenant-admin')
   .post(
     AuthController.verify,
     AuthController.verifyRole(ROLES_FOR_TENANT_ADMIN_CREATION),
-    validateBody(schemas.newTenantAdminSchema),
-    UsersController.createTenantAdmin
+    validateBody(schemas.asTenantAdmin.newTenantAdminSchema),
+    UsersController.asTenantAdmin.createTenantAdmin
   )
 
 module.exports = router
