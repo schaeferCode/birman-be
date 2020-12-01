@@ -24,7 +24,7 @@ router.route('/client-admin/create-client-admin')
     validateBody(schemas.asClientAdmin.newClientAdminSchema),
     UsersController.asClientAdmin.createClientAdmin
   )
-  
+
 router.route('/client-admin/create-client-user')
   .post(
     AuthController.verify,
@@ -40,7 +40,7 @@ router.route('/edit')
     validateBody(schemas.editUserSchema),
     UsersController.editUser
   )
-    
+
 router.route('/tenant-admin/create-client-admin')
   .post(
     AuthController.verify,
