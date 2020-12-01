@@ -40,7 +40,7 @@ module.exports = {
       if (foundUser) {
         return res.status(403).send({ error: 'User already exists' })
       }
-  
+
       const newUser = {
         clientKey,
         email,
@@ -51,7 +51,7 @@ module.exports = {
         tenantKey
       }
       User.create(newUser)
-      
+
       res.sendStatus(200)
     },
   },
@@ -66,7 +66,7 @@ module.exports = {
       if (foundUser) {
         return res.status(403).send({ error: 'User already exists' })
       }
-  
+
       const newUser = {
         clientKey,
         email,
@@ -77,7 +77,7 @@ module.exports = {
         tenantKey
       }
       User.create(newUser)
-  
+
       const entity = await Tenant.findOne({ key: tenantKey }).exec()
       const foundClient = entity.clients.find(client => client.key === clientKey)
       if (!foundClient) {
@@ -93,7 +93,7 @@ module.exports = {
         entity.clients.push(newClient)
         entity.save()
       }
-      
+
       res.sendStatus(200)
     }
   },
