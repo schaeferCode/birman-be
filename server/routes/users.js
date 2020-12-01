@@ -1,8 +1,8 @@
 const router = require('express-promise-router')()
 
 const { validateBody, schemas } = require('../helpers/routeHelpers')
-const UsersController = require('../controllers/users')
-const AuthController = require('../controllers/auth')
+const usersControllers = require('../controllers/users')
+const auth = require('../middleware/auth')
 
 const VALID_ROLES = ['tenant-admin', 'client-admin', 'root']
 const ROLES_FOR_CLIENT_ADMIN_CREATION = ['tenant-admin', 'client-admin']
@@ -11,50 +11,50 @@ const ROLES_FOR_TENANT_ADMIN_CREATION = ['tenant-admin', 'root']
 
 router.route('/batch-user-creation')
   .post(
-    AuthController.verify,
-    AuthController.verifyRole(['tenant-admin']),
+    auth.verify,
+    auth.verifyRole(['tenant-admin']),
     validateBody(schemas.batchUserCreationSchema),
-    UsersController.batchUserCreation
+    usersControllers.batchUserCreation
   )
 
 router.route('/client-admin/create-client-admin')
   .post(
-    AuthController.verify,
-    AuthController.verifyRole(ROLES_FOR_CLIENT_ADMIN_CREATION),
+    auth.verify,
+    auth.verifyRole(ROLES_FOR_CLIENT_ADMIN_CREATION),
     validateBody(schemas.asClientAdmin.newClientAdminSchema),
-    UsersController.asClientAdmin.createClientAdmin
+    usersControllers.asClientAdmin.createClientAdmin
   )
 
 router.route('/client-admin/create-client-user')
   .post(
-    AuthController.verify,
-    AuthController.verifyRole(ROLES_FOR_CLIENT_USER_CREATION),
+    auth.verify,
+    auth.verifyRole(ROLES_FOR_CLIENT_USER_CREATION),
     validateBody(schemas.asClientAdmin.newClientUserSchema),
-    UsersController.asClientAdmin.createClientUser
+    usersControllers.asClientAdmin.createClientUser
   )
 
 router.route('/edit')
   .post(
-    AuthController.verify,
-    AuthController.verifyRole(VALID_ROLES),
+    auth.verify,
+    auth.verifyRole(VALID_ROLES),
     validateBody(schemas.editUserSchema),
-    UsersController.editUser
+    usersControllers.editUser
   )
 
 router.route('/tenant-admin/create-client-admin')
   .post(
-    AuthController.verify,
-    AuthController.verifyRole(ROLES_FOR_CLIENT_ADMIN_CREATION),
+    auth.verify,
+    auth.verifyRole(ROLES_FOR_CLIENT_ADMIN_CREATION),
     validateBody(schemas.asTenantAdmin.newClientAdminSchema),
-    UsersController.asTenantAdmin.createClientAdmin
+    usersControllers.asTenantAdmin.createClientAdmin
   )
 
 router.route('/tenant-admin/create-tenant-admin')
   .post(
-    AuthController.verify,
-    AuthController.verifyRole(ROLES_FOR_TENANT_ADMIN_CREATION),
+    auth.verify,
+    auth.verifyRole(ROLES_FOR_TENANT_ADMIN_CREATION),
     validateBody(schemas.asTenantAdmin.newTenantAdminSchema),
-    UsersController.asTenantAdmin.createTenantAdmin
+    usersControllers.asTenantAdmin.createTenantAdmin
   )
 
 module.exports = router
