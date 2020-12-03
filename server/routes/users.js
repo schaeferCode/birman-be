@@ -4,9 +4,8 @@ const { validateBody, schemas } = require('../helpers/routeHelpers')
 const usersControllers = require('../controllers/users')
 const auth = require('../middleware/auth')
 
-const VALID_ROLES = ['tenant-admin', 'client-admin', 'root']
 const ROLES_FOR_CLIENT_ADMIN_CREATION = ['tenant-admin', 'client-admin']
-const ROLES_FOR_CLIENT_USER_CREATION = ['client-admin']
+const ROLES_FOR_CLIENT_USERS = ['client-admin']
 const ROLES_FOR_TENANT_ADMIN_CREATION = ['tenant-admin', 'root']
 
 router.route('/batch-user-creation')
@@ -28,17 +27,17 @@ router.route('/client-admin/create-client-admin')
 router.route('/client-admin/create-client-user')
   .post(
     auth.verify,
-    auth.verifyRole(ROLES_FOR_CLIENT_USER_CREATION),
+    auth.verifyRole(ROLES_FOR_CLIENT_USERS),
     validateBody(schemas.asClientAdmin.newClientUserSchema),
     usersControllers.asClientAdmin.createClientUser
   )
 
-router.route('/edit')
+router.route('/client-admin/edit-client-user')
   .post(
     auth.verify,
-    auth.verifyRole(VALID_ROLES),
-    validateBody(schemas.editUserSchema),
-    usersControllers.editUser
+    auth.verifyRole(ROLES_FOR_CLIENT_USERS),
+    validateBody(schemas.asClientAdmin.editClientUserSchema),
+    usersControllers.asClientAdmin.editClientUser
   )
 
 router.route('/tenant-admin/create-client-admin')

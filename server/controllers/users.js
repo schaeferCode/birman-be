@@ -54,6 +54,15 @@ module.exports = {
 
       res.sendStatus(200)
     },
+
+    editClientUser: async (req, res) => {
+      const { email, familyName, givenName } = req.value.body
+      const { clientKey } = req.payload
+
+      // find user in db
+      // double check to ensure clientKey of existing user matches clientKey in payload
+      // update user account and save
+    }
   },
 
   asTenantAdmin: {
@@ -120,15 +129,6 @@ module.exports = {
       
       res.sendStatus(200)
     },
-  },
-
-  editUser: async (req, res) => {
-    const { tenant } = req.payload
-    const { role, givenName, familyName, email } = req.value.body
-
-    const updatedTenant = await Tenant.findOneAndUpdate({key: tenant, 'users.email': email }, {'users.$.role': role, 'users.$.givenName': givenName, 'users.$.familyName': familyName }, {new: true})
-
-    res.status(200).json({ updatedTenant }) //TODO: figure out what to send back
   },
 
   batchUserCreation: async (req, res) => {
