@@ -62,6 +62,19 @@ module.exports = {
       // find user in db
       // double check to ensure clientKey of existing user matches clientKey in payload
       // update user account and save
+    },
+
+    getUsers: async (req, res) => {
+      const { clientKey } = req.payload
+
+      try {
+        // find all users in db with matching clientKey
+        const users = await User.find({ clientKey }).lean()
+        res.status(200).send({ users })
+      } catch (error) {
+        console.log({error})
+      }
+
     }
   },
 

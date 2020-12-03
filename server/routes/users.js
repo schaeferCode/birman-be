@@ -8,6 +8,13 @@ const ROLES_FOR_CLIENT_ADMIN_CREATION = ['tenant-admin', 'client-admin']
 const ROLES_FOR_CLIENT_USERS = ['client-admin']
 const ROLES_FOR_TENANT_ADMIN_CREATION = ['tenant-admin', 'root']
 
+router.route('/client-admin')
+  .get(
+    auth.verify,
+    auth.verifyRole(ROLES_FOR_CLIENT_USERS),
+    usersControllers.asClientAdmin.getUsers
+  )
+
 router.route('/batch-user-creation')
   .post(
     auth.verify,
