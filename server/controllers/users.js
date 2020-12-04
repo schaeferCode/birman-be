@@ -55,7 +55,7 @@ module.exports = {
       res.sendStatus(200)
     },
 
-    editClientUser: async (req, res) => {
+    editUser: async (req, res) => {
       const { _id, email, familyName, givenName } = req.value.body
       const { clientKey } = req.payload
 

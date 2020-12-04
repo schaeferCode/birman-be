@@ -39,12 +39,12 @@ router.route('/client-admin/create-client-user')
     usersControllers.asClientAdmin.createClientUser
   )
 
-router.route('/client-admin/edit-client-user')
+router.route('/client-admin/edit-user')
   .patch(
     auth.verify,
     auth.verifyRole(ROLES_FOR_CLIENT_USERS),
-    validateBody(schemas.asClientAdmin.editClientUserSchema),
-    usersControllers.asClientAdmin.editClientUser
+    validateBody(schemas.asClientAdmin.editUserSchema),
+    usersControllers.asClientAdmin.editUser
   )
 
 router.route('/tenant-admin/create-client-admin')
