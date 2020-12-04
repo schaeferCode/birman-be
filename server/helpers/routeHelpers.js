@@ -18,6 +18,7 @@ module.exports = {
   schemas: {
     asClientAdmin: {
       editClientUserSchema: Joi.object().keys({
+        _id: Joi.string().required(),
         email: Joi.string().required().lowercase(),
         familyName: Joi.string().required(),
         givenName: Joi.string().required(),

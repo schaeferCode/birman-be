@@ -40,7 +40,7 @@ router.route('/client-admin/create-client-user')
   )
 
 router.route('/client-admin/edit-client-user')
-  .post(
+  .patch(
     auth.verify,
     auth.verifyRole(ROLES_FOR_CLIENT_USERS),
     validateBody(schemas.asClientAdmin.editClientUserSchema),

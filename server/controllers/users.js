@@ -56,21 +56,33 @@ module.exports = {
     },
 
     editClientUser: async (req, res) => {
-      const { email, familyName, givenName } = req.value.body
+      const { _id, email, familyName, givenName } = req.value.body
       const { clientKey } = req.payload
 
       // find user in db
+      const user = await User.findById(_id).exec()
       // double check to ensure clientKey of existing user matches clientKey in payload
+      if (user.clientKey !== clientKey) {
+        res.status(403).send({ error: 'You don\'t have permission to edit this user' })
+      }
       // update user account and save
+      user.email = email
+      user.familyName = familyName
+      user.givenName = givenName
+      user.save()
+
+      res.sendStatus(200)
     },
 
     getUsers: async (req, res) => {
       const { clientKey } = req.payload
 
       try {
-        // find all users in db with matching clientKey
         const users = await User.find({ clientKey }).lean()
-        res.status(200).send(users)
+        const filteredUsers = users.map(user => {
+          return _.pick(user, ['_id', 'email', 'familyName', 'givenName', 'role', 'tenantKey'])
+        })
+        res.status(200).send(filteredUsers)
       } catch (error) {
         console.log({error})
       }
