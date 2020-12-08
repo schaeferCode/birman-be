@@ -17,12 +17,6 @@ module.exports = {
 
   schemas: {
     asClientAdmin: {
-      editUserSchema: Joi.object().keys({
-        _id: Joi.string().required(),
-        email: Joi.string().required().lowercase(),
-        familyName: Joi.string().required(),
-        givenName: Joi.string().required(),
-      }),
       newClientAdminSchema: Joi.object().keys({
         email: Joi.string().email().required().lowercase(),
         familyName: Joi.string().required(),
@@ -52,6 +46,12 @@ module.exports = {
         role: Joi.string().valid('tenant-admin').required()
       }),
     },
+    editUserSchema: Joi.object().keys({
+      _id: Joi.string().required(),
+      email: Joi.string().required().lowercase(),
+      familyName: Joi.string().required(),
+      givenName: Joi.string().required(),
+    }),
     authSchema: Joi.object().keys({
       email: Joi.string().email().required().lowercase(),
       password: Joi.string().required(),

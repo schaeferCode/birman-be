@@ -5,6 +5,8 @@ const Tenant = require('../models/tenant')
 const User = require('../models/user')
 const { convertToKey } = require('../utilities')
 
+const SAFE_USER_KEYS = ['_id', 'email', 'familyName', 'givenName', 'role', 'tenantKey']
+
 module.exports = {
   asClientAdmin: {
     createClientAdmin: async (req, res) => {
@@ -55,38 +57,18 @@ module.exports = {
       res.sendStatus(200)
     },
 
-    editUser: async (req, res) => {
-      const { _id, email, familyName, givenName } = req.value.body
-      const { clientKey } = req.payload
-
-      // find user in db
-      const user = await User.findById(_id).exec()
-      // double check to ensure clientKey of existing user matches clientKey in payload
-      if (user.clientKey !== clientKey) {
-        res.status(403).send({ error: 'You don\'t have permission to edit this user' })
-      }
-      // update user account and save
-      user.email = email
-      user.familyName = familyName
-      user.givenName = givenName
-      user.save()
-
-      res.sendStatus(200)
-    },
-
     getUsers: async (req, res) => {
       const { clientKey } = req.payload
 
       try {
         const users = await User.find({ clientKey }).lean()
         const filteredUsers = users.map(user => {
-          return _.pick(user, ['_id', 'email', 'familyName', 'givenName', 'role', 'tenantKey'])
+          return _.pick(user, SAFE_USER_KEYS)
         })
         res.status(200).send(filteredUsers)
       } catch (error) {
         console.log({error})
       }
-
     }
   },
 
@@ -154,6 +136,34 @@ module.exports = {
       
       res.sendStatus(200)
     },
+
+    getUsers: async (req, res) => {
+      const { tenantKey } = req.payload
+
+      try {
+        const users = await User.find({ tenantKey }).lean()
+        const filteredUsers = users.map(user => {
+          return _.pick(user, SAFE_USER_KEYS)
+        })
+        res.status(200).send(filteredUsers)
+      } catch (error) {
+        console.log({error})
+      }
+    }
+  },
+
+  editUser: async (req, res) => {
+    const { _id, email, familyName, givenName } = req.value.body
+
+    // find user in db
+    const user = await User.findById(_id).exec()
+    // update user account and save
+    user.email = email
+    user.familyName = familyName
+    user.givenName = givenName
+    user.save()
+
+    res.sendStatus(200)
   },
 
   batchUserCreation: async (req, res) => {
