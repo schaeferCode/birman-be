@@ -4,10 +4,26 @@ const { validateBody, schemas } = require('../helpers/routeHelpers')
 const usersControllers = require('../controllers/users')
 const auth = require('../middleware/auth')
 
-const VALID_ROLES = ['tenant-admin', 'client-admin', 'root']
 const ROLES_FOR_CLIENT_ADMIN_CREATION = ['tenant-admin', 'client-admin']
-const ROLES_FOR_CLIENT_USER_CREATION = ['client-admin']
 const ROLES_FOR_TENANT_ADMIN_CREATION = ['tenant-admin', 'root']
+
+// ********** GET REQUESTS ************ \\
+
+router.route('/client-admin')
+  .get(
+    auth.verify,
+    auth.verifyRole(['client-admin']),
+    usersControllers.asClientAdmin.getUsers
+  )
+
+router.route('/tenant-admin')
+  .get(
+    auth.verify,
+    auth.verifyRole(['tenant-admin']),
+    usersControllers.asTenantAdmin.getUsers
+  )
+
+// ********** POST REQUESTS ************ \\
 
 router.route('/batch-user-creation')
   .post(
@@ -28,17 +44,9 @@ router.route('/client-admin/create-client-admin')
 router.route('/client-admin/create-client-user')
   .post(
     auth.verify,
-    auth.verifyRole(ROLES_FOR_CLIENT_USER_CREATION),
+    auth.verifyRole(['client-admin']),
     validateBody(schemas.asClientAdmin.newClientUserSchema),
     usersControllers.asClientAdmin.createClientUser
-  )
-
-router.route('/edit')
-  .post(
-    auth.verify,
-    auth.verifyRole(VALID_ROLES),
-    validateBody(schemas.editUserSchema),
-    usersControllers.editUser
   )
 
 router.route('/tenant-admin/create-client-admin')
@@ -48,13 +56,31 @@ router.route('/tenant-admin/create-client-admin')
     validateBody(schemas.asTenantAdmin.newClientAdminSchema),
     usersControllers.asTenantAdmin.createClientAdmin
   )
-
+    
 router.route('/tenant-admin/create-tenant-admin')
   .post(
     auth.verify,
     auth.verifyRole(ROLES_FOR_TENANT_ADMIN_CREATION),
     validateBody(schemas.asTenantAdmin.newTenantAdminSchema),
     usersControllers.asTenantAdmin.createTenantAdmin
+  )
+
+// ********** PATCH REQUESTS ************ \\
+      
+router.route('/client-admin/edit-user')
+  .patch(
+    auth.verify,
+    auth.verifyRole(['client-admin']),
+    validateBody(schemas.editUserSchema),
+    usersControllers.editUser
+  )
+
+router.route('/tenant-admin/edit-user')
+  .patch(
+    auth.verify,
+    auth.verifyRole(['tenant-admin']),
+    validateBody(schemas.editUserSchema),
+    usersControllers.editUser
   )
 
 module.exports = router
