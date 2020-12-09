@@ -83,4 +83,22 @@ router.route('/tenant-admin/edit-user')
     usersControllers.editUser
   )
 
+// ********** DELETE REQUESTS ************ \\
+
+router.route('/tenant-admin')
+  .delete(
+    auth.verify,
+    auth.verifyRole(['tenant-admin']),
+    validateBody(schemas.deleteUserSchema),
+    usersControllers.deleteUser
+  )
+
+router.route('/client-admin')
+  .delete(
+    auth.verify,
+    auth.verifyRole(['client-admin']),
+    validateBody(schemas.deleteUserSchema),
+    usersControllers.deleteUser
+  )
+
 module.exports = router
