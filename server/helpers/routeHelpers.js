@@ -3,6 +3,7 @@ const Joi = require('joi')
 module.exports = {
   validateBody: (schema) => (req, res, next) => {
     const result = schema.validate(req.body)
+
     if (result.error) {
       return res.status(200).json(result.error)
     }
@@ -46,6 +47,9 @@ module.exports = {
         role: Joi.string().valid('tenant-admin').required()
       }),
     },
+    deleteUserSchema: Joi.object().keys({
+      _id: Joi.string().required()
+    }),
     editUserSchema: Joi.object().keys({
       _id: Joi.string().required(),
       email: Joi.string().required().lowercase(),

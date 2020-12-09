@@ -152,6 +152,17 @@ module.exports = {
     }
   },
 
+  deleteUser: async (req, res) => {
+    const { _id } = req.value.body
+
+    try {
+      const removedUser = await User.findByIdAndDelete(_id).exec()
+      res.status(204).send({ removedUser })
+    } catch (error) {
+      console.log({error})
+    }
+  },
+
   editUser: async (req, res) => {
     const { _id, email, familyName, givenName } = req.value.body
 
