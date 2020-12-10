@@ -9,7 +9,8 @@ const adServicesSchema = new Schema({
     required: true,
     enum: AD_SERVICES_LIST,
   },
-  serviceClientId: { // ID of manager account
+  serviceClientId: {
+    // ID of manager account
     type: String,
   },
   // TODO: Maybe this is needed?
@@ -30,7 +31,7 @@ const adServicesSchema = new Schema({
   dateUpdated: {
     type: Date,
     default: Date.now,
-  }
+  },
 })
 
 const activatedAdServices = new Schema({
@@ -39,7 +40,8 @@ const activatedAdServices = new Schema({
     enum: AD_SERVICES_LIST,
     required: true,
   },
-  serviceUserId: { // ID of client ad account
+  serviceUserId: {
+    // ID of client ad account
     type: String,
     required: true,
   },
@@ -50,17 +52,17 @@ const activatedAdServices = new Schema({
   dateUpdated: {
     type: Date,
     default: Date.now,
-  }
+  },
 })
 
 const clientSchema = new Schema({
   dateCreated: {
     type: Date,
-    default: Date.now
+    default: Date.now,
   },
   dateUpdated: {
     type: Date,
-    default: Date.now
+    default: Date.now,
   },
   key: {
     type: String,
@@ -70,12 +72,12 @@ const clientSchema = new Schema({
     unique: true,
   },
   linkedAdServices: {
-    type: [activatedAdServices]
+    type: [activatedAdServices],
   },
   name: {
     type: String,
     required: true,
-    unique: true
+    unique: true,
   },
 })
 
@@ -84,15 +86,15 @@ const tenantSchema = new Schema({
     type: [adServicesSchema],
   },
   clients: {
-    type: [clientSchema]
+    type: [clientSchema],
   },
   dateCreated: {
     type: Date,
-    default: Date.now
+    default: Date.now,
   },
   dateUpdated: {
     type: Date,
-    default: Date.now
+    default: Date.now,
   },
   key: {
     type: String,

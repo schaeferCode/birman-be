@@ -2,7 +2,7 @@ const JWT = require('jsonwebtoken')
 
 const User = require('../models/user')
 
-const signToken = user => {
+const signToken = (user) => {
   const { clientKey, email, familyName, givenName, id, role, tenantKey } = user
   const payload = { clientKey, email, familyName, givenName, id, role, tenantKey }
 
@@ -20,7 +20,7 @@ module.exports = {
     const { email, password } = req.value.body
 
     try {
-      const user = await User.findOne({ 'email': email }).exec()
+      const user = await User.findOne({ email: email }).exec()
 
       // if not, handle that
       if (!user) return res.sendStatus(401)
@@ -42,5 +42,5 @@ module.exports = {
 
   secret: async (req, res) => {
     res.status(200).json({ secret: 'resource' })
-  }
+  },
 }

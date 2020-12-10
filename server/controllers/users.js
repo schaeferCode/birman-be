@@ -26,7 +26,7 @@ module.exports = {
         givenName,
         passwordHash: generator.generate(),
         role,
-        tenantKey
+        tenantKey,
       }
       User.create(newUser)
 
@@ -50,7 +50,7 @@ module.exports = {
         givenName,
         passwordHash: generator.generate(),
         role,
-        tenantKey
+        tenantKey,
       }
       User.create(newUser)
 
@@ -62,14 +62,14 @@ module.exports = {
 
       try {
         const users = await User.find({ clientKey }).lean()
-        const filteredUsers = users.map(user => {
+        const filteredUsers = users.map((user) => {
           return _.pick(user, SAFE_USER_KEYS)
         })
         res.status(200).send(filteredUsers)
       } catch (error) {
-        console.log({error})
+        console.log({ error })
       }
-    }
+    },
   },
 
   asTenantAdmin: {
@@ -77,13 +77,13 @@ module.exports = {
       const { clientName, email, familyName, givenName, role, serviceUserId } = req.value.body
       const { tenantKey } = req.payload
       const clientKey = convertToKey(clientName)
-  
+
       // check if account already exists
       const foundUser = await User.findOne({ email }).lean()
       if (foundUser) {
         return res.status(403).send({ error: 'User already exists' })
       }
-      
+
       const newUser = {
         clientKey,
         email,
@@ -91,21 +91,23 @@ module.exports = {
         givenName,
         passwordHash: generator.generate(),
         role,
-        tenantKey
+        tenantKey,
       }
       User.create(newUser)
 
       const entity = await Tenant.findOne({ key: tenantKey }).exec()
-      const foundClient = entity.clients.find(client => client.key === clientKey)
+      const foundClient = entity.clients.find((client) => client.key === clientKey)
       if (!foundClient) {
         const newClient = {
           key: clientKey,
-          linkedAdServices: [{
-            name: 'google',
-            serviceUserId,
-            active: true
-          }],
-          name: clientName
+          linkedAdServices: [
+            {
+              name: 'google',
+              serviceUserId,
+              active: true,
+            },
+          ],
+          name: clientName,
         }
         entity.clients.push(newClient)
         entity.save()
@@ -117,23 +119,23 @@ module.exports = {
     createTenantAdmin: async (req, res) => {
       const { email, familyName, givenName, role } = req.value.body
       const { tenantKey } = req.payload
-  
+
       // check if account already exists
       const foundUser = await User.findOne({ email }).lean()
       if (foundUser) {
         return res.status(403).send({ error: 'User already exists' })
       }
-  
+
       const newUser = {
         email,
         familyName,
         givenName,
         passwordHash: generator.generate(),
         role,
-        tenantKey
+        tenantKey,
       }
       User.create(newUser)
-      
+
       res.sendStatus(200)
     },
 
@@ -142,14 +144,14 @@ module.exports = {
 
       try {
         const users = await User.find({ tenantKey }).lean()
-        const filteredUsers = users.map(user => {
+        const filteredUsers = users.map((user) => {
           return _.pick(user, SAFE_USER_KEYS)
         })
         res.status(200).send(filteredUsers)
       } catch (error) {
-        console.log({error})
+        console.log({ error })
       }
-    }
+    },
   },
 
   deleteUser: async (req, res) => {
@@ -159,7 +161,7 @@ module.exports = {
       await User.findByIdAndDelete(_id).exec()
       res.sendStatus(204)
     } catch (error) {
-      console.log({error})
+      console.log({ error })
     }
   },
 
@@ -181,37 +183,47 @@ module.exports = {
     const { tenantKey } = req.payload
     const { users } = req.value.body
     // find tenant
-    const entity = await Tenant.findOne({key: tenantKey }).exec()
+    const entity = await Tenant.findOne({ key: tenantKey }).exec()
 
     // iterate through submitted userList and create new users and new clients
-    const newUsersList = _.reduce(users, (usersList, { clientName, email, familyName, givenName, tenantKey }) => {
-      usersList.push({
-        clientKey: convertToKey(clientName),
-        email,
-        familyName,
-        givenName,
-        passwordHash: generator.generate(),
-        role: 'client-admin',
-        tenantKey
-      })
-      return usersList
-    }, [])
-    const updatedTenant = _.reduce(users, (updatedEntity, { clientName,  }, userId) => {
-      const newDbClient = {
-        key: convertToKey(clientName),
-        linkedAdServices: [{
-          name: 'google', // TODO: fix hardcode
-          serviceUserId: userId,
-          active: true
-        }],
-        name: clientName
-      }
-      updatedEntity.clients.push(newDbClient)
-      return updatedEntity
-    }, entity)
+    const newUsersList = _.reduce(
+      users,
+      (usersList, { clientName, email, familyName, givenName, tenantKey }) => {
+        usersList.push({
+          clientKey: convertToKey(clientName),
+          email,
+          familyName,
+          givenName,
+          passwordHash: generator.generate(),
+          role: 'client-admin',
+          tenantKey,
+        })
+        return usersList
+      },
+      [],
+    )
+    const updatedTenant = _.reduce(
+      users,
+      (updatedEntity, { clientName }, userId) => {
+        const newDbClient = {
+          key: convertToKey(clientName),
+          linkedAdServices: [
+            {
+              name: 'google', // TODO: fix hardcode
+              serviceUserId: userId,
+              active: true,
+            },
+          ],
+          name: clientName,
+        }
+        updatedEntity.clients.push(newDbClient)
+        return updatedEntity
+      },
+      entity,
+    )
 
     await User.create(newUsersList)
     await updatedTenant.save()
     res.sendStatus(200)
-  }
+  },
 }

@@ -16,7 +16,7 @@ if (process.env.NODE_ENV === 'test') {
       console.log('DB connection successful')
     })
     .catch((err: any) => {
-      console.log({err})
+      console.log({ err })
     })
 }
 
@@ -42,10 +42,6 @@ module.exports = app
 // const AdAccount = bizSdk.AdAccount;
 // const Campaign = bizSdk.Campaign;
 
-
-
-
-
 // app.get('/facebook', (req, res) => {
 //   const account = new AdAccount(accountId);
 //   let campaigns;
@@ -60,5 +56,3 @@ module.exports = app
 //       res.end(JSON.stringify(campaigns))
 //     }).catch(console.error);
 // });
-
-

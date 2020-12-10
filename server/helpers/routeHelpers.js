@@ -38,17 +38,17 @@ module.exports = {
         familyName: Joi.string().required(),
         givenName: Joi.string().required(),
         role: Joi.string().valid('client-admin').required(),
-        serviceUserId: Joi.string().required()
+        serviceUserId: Joi.string().required(),
       }),
       newTenantAdminSchema: Joi.object().keys({
         email: Joi.string().email().required().lowercase(),
         familyName: Joi.string().required(),
         givenName: Joi.string().required(),
-        role: Joi.string().valid('tenant-admin').required()
+        role: Joi.string().valid('tenant-admin').required(),
       }),
     },
     deleteUserSchema: Joi.object().keys({
-      _id: Joi.string().required()
+      _id: Joi.string().required(),
     }),
     editUserSchema: Joi.object().keys({
       _id: Joi.string().required(),
@@ -60,12 +60,17 @@ module.exports = {
       email: Joi.string().email().required().lowercase(),
       password: Joi.string().required(),
     }),
-    batchUserCreationSchema: Joi.object({ users: Joi.object().pattern(Joi.number(), Joi.object({
-      clientName: Joi.string().required(),
-      email: Joi.string().required().lowercase(),
-      familyName: Joi.string().required(),
-      givenName: Joi.string().required(),
-      selected: Joi.bool(),
-    }))})
-  }
+    batchUserCreationSchema: Joi.object({
+      users: Joi.object().pattern(
+        Joi.number(),
+        Joi.object({
+          clientName: Joi.string().required(),
+          email: Joi.string().required().lowercase(),
+          familyName: Joi.string().required(),
+          givenName: Joi.string().required(),
+          selected: Joi.bool(),
+        }),
+      ),
+    }),
+  },
 }

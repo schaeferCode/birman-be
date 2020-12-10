@@ -1,6 +1,6 @@
 const JWT = require('jsonwebtoken')
 
-const verifyBearer = authorization => {
+const verifyBearer = (authorization) => {
   const authorizationParts = authorization.split(' ')
   if (authorizationParts[0] === 'Bearer') {
     return authorizationParts[1]
@@ -30,11 +30,11 @@ module.exports = {
       } else {
         rolesAsString = validRole
       }
-  
+
       if (!rolesAsString.includes(role)) {
         return res.status(400).send(`This page is restricted to ${rolesAsString}s only`)
       }
       next()
     }
-  }
+  },
 }
