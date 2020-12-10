@@ -1,7 +1,6 @@
-const express = require('express')
-const morgan = require('morgan')
-const mongoose = require('mongoose')
-const cors = require('cors')
+import express from 'express'
+import mongoose from 'mongoose'
+import cors from 'cors'
 
 // const bizSdk = require('facebook-nodejs-business-sdk');
 
@@ -16,7 +15,7 @@ if (process.env.NODE_ENV === 'test') {
     .then(() => {
       console.log('DB connection successful')
     })
-    .catch(err => {
+    .catch((err: any) => {
       console.log({err})
     })
 }
@@ -25,8 +24,8 @@ const app = express()
 app.use(cors()) // TODO: Add whitelisted domains/ports
 
 // Middleware
-if (!process.env.NODE_ENV === 'test') {
-  app.use(morgan('dev'))
+if (process.env.NODE_ENV !== 'test') {
+  app.use(require('morgan')('dev'))
 }
 app.use(express.json())
 
