@@ -56,7 +56,7 @@ module.exports = {
                     return [4 /*yield*/, JWT.verify(token, process.env.JWT_SECRET)];
                 case 1:
                     payload = _a.sent();
-                    req.payload = payload;
+                    res.locals.payload = payload;
                     next();
                     return [3 /*break*/, 3];
                 case 2:
@@ -71,7 +71,7 @@ module.exports = {
         return function (req, res, next) { return __awaiter(void 0, void 0, void 0, function () {
             var role, rolesAsString;
             return __generator(this, function (_a) {
-                role = req.payload.role;
+                role = res.locals.payload.role;
                 if (Array.isArray(validRole)) {
                     rolesAsString = validRole.join('s and ');
                 }
@@ -85,5 +85,5 @@ module.exports = {
                 return [2 /*return*/];
             });
         }); };
-    }
+    },
 };

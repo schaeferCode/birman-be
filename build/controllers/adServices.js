@@ -95,7 +95,7 @@ module.exports = {
                         client_secret: process.env.GOOGLE_CLIENT_SECRET,
                         developerToken: process.env.GOOGLE_DEV_TOKEN,
                         refresh_token: refresh_token,
-                        userAgent: USER_AGENT
+                        userAgent: USER_AGENT,
                     });
                     customerService = adWordsUser.getService('CustomerService', ADWORDS_API_VERSION);
                     return [4 /*yield*/, googleGetRequest(customerService, 'getCustomers')];
@@ -109,7 +109,7 @@ module.exports = {
                         expiryDate: expiry_date,
                         name: 'google',
                         refreshToken: refresh_token,
-                        serviceClientId: managerAccount.customerId
+                        serviceClientId: managerAccount.customerId,
                     };
                     entity_1.adServices.push(newAdService);
                     return [4 /*yield*/, entity_1.save()];
@@ -133,7 +133,7 @@ module.exports = {
         return __generator(this, function (_b) {
             switch (_b.label) {
                 case 0:
-                    tenantKey = req.payload.tenantKey;
+                    tenantKey = res.locals.payload.tenantKey;
                     return [4 /*yield*/, Tenant.findOne({ key: tenantKey }).lean()];
                 case 1:
                     entity = _b.sent();
@@ -148,18 +148,17 @@ module.exports = {
                         clientCustomerId: serviceClientId,
                         developerToken: process.env.GOOGLE_DEV_TOKEN,
                         refresh_token: refreshToken,
-                        userAgent: USER_AGENT
+                        userAgent: USER_AGENT,
                     });
                     managedCustomerService = adWordsUser.getService('ManagedCustomerService', ADWORDS_API_VERSION);
                     return [4 /*yield*/, googleGetRequest(managedCustomerService, 'get', {
                             serviceSelector: {
-                                fields: ['TestAccount', 'AccountLabels', 'Name', 'CustomerId', 'CanManageClients']
-                            }
+                                fields: ['TestAccount', 'AccountLabels', 'Name', 'CustomerId', 'CanManageClients'],
+                            },
                         })];
                 case 2:
                     allClients = (_b.sent()).entries;
-                    allClients = allClients
-                        .filter(function (account) { return !account.canManageClients; });
+                    allClients = allClients.filter(function (account) { return !account.canManageClients; });
                     // mark clients that already exist in DB
                     allClients = allClients.map(function (account) {
                         var foundClient = entity.clients.find(function (_a) {
@@ -181,7 +180,7 @@ module.exports = {
         return __generator(this, function (_c) {
             switch (_c.label) {
                 case 0:
-                    _a = req.payload, tenant = _a.tenant, organizationName = _a.organizationName;
+                    _a = res.locals.payload, tenant = _a.tenant, organizationName = _a.organizationName;
                     return [4 /*yield*/, Tenant.findOne({ key: tenant }).lean()];
                 case 1:
                     entity = _c.sent();
@@ -200,25 +199,23 @@ module.exports = {
                         client_secret: process.env.GOOGLE_CLIENT_SECRET,
                         developerToken: process.env.GOOGLE_DEV_TOKEN,
                         refresh_token: refreshToken,
-                        userAgent: USER_AGENT
+                        userAgent: USER_AGENT,
                     });
                     reportOptions = {
                         reportName: 'Custom Adgroup Performance Report',
                         reportType: 'CAMPAIGN_PERFORMANCE_REPORT',
                         fields: ['CampaignId', 'Impressions', 'Clicks', 'Cost'],
-                        filters: [
-                            { field: 'CampaignStatus', operator: 'IN', values: ['ENABLED', 'PAUSED'] }
-                        ],
+                        filters: [{ field: 'CampaignStatus', operator: 'IN', values: ['ENABLED', 'PAUSED'] }],
                         dateRangeType: 'CUSTOM_DATE',
                         startDate: new Date('07/10/2016'),
                         endDate: new Date(),
-                        format: 'CSV' //defaults to CSV
+                        format: 'CSV',
                     };
                     return [4 /*yield*/, googleGetReport(adWordsReportInstance, ADWORDS_API_VERSION, reportOptions)];
                 case 3:
                     report = _c.sent();
                     return [4 /*yield*/, neatCsv(report, {
-                            skipLines: 1
+                            skipLines: 1,
                         })];
                 case 4:
                     report = _c.sent();
@@ -237,7 +234,7 @@ module.exports = {
         return __generator(this, function (_b) {
             switch (_b.label) {
                 case 0:
-                    tenantKey = req.payload.tenantKey;
+                    tenantKey = res.locals.payload.tenantKey;
                     return [4 /*yield*/, User.find().lean()
                         // get refresh and access tokens from tenant
                     ];
@@ -258,13 +255,13 @@ module.exports = {
                         clientCustomerId: serviceClientId,
                         developerToken: process.env.GOOGLE_DEV_TOKEN,
                         refresh_token: refreshToken,
-                        userAgent: USER_AGENT
+                        userAgent: USER_AGENT,
                     });
                     managedCustomerService = adWordsUser.getService('ManagedCustomerService', ADWORDS_API_VERSION);
                     return [4 /*yield*/, googleGetRequest(managedCustomerService, 'get', {
                             serviceSelector: {
-                                fields: ['TestAccount', 'AccountLabels', 'Name', 'CustomerId', 'CanManageClients']
-                            }
+                                fields: ['TestAccount', 'AccountLabels', 'Name', 'CustomerId', 'CanManageClients'],
+                            },
                         })];
                 case 4:
                     subAccounts = (_b.sent()).entries;
@@ -294,7 +291,9 @@ module.exports = {
                 case 5:
                     error_3 = _b.sent();
                     console.log({ error: error_3 });
-                    res.status(404).send({ error: { message: 'Something went wrong when trying to obtain your subaccounts. Please try again.' } });
+                    res
+                        .status(404)
+                        .send({ error: { message: 'Something went wrong when trying to obtain your subaccounts. Please try again.' } });
                     return [3 /*break*/, 6];
                 case 6: return [2 /*return*/];
             }
@@ -305,10 +304,10 @@ module.exports = {
             access_type: 'offline',
             prompt: 'consent',
             scope: 'https://www.googleapis.com/auth/adwords',
-            state: JSON.stringify({ tenantKey: req.payload.tenantKey })
+            state: JSON.stringify({ tenantKey: res.locals.payload.tenantKey }),
         });
         res.json({
-            redirectUrl: URL
+            redirectUrl: URL,
         });
     },
 };

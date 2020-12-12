@@ -1,6 +1,7 @@
-const mongoose = require('mongoose')
+import mongoose, { Schema } from 'mongoose'
 // const bcrypt = require('bcryptjs');
-const Schema = mongoose.Schema
+
+import { IUserDocument } from '../types'
 
 const ROLES = ['tenant-admin', 'client-admin', 'user', 'root']
 
@@ -17,7 +18,7 @@ const userSchema = new Schema({
     // if role is 'user' or 'client-admin', this is the company they work for, e.g. 'ez-dental'
     type: String,
     lowercase: true,
-    required: function () {
+    required: function (this: IUserDocument) {
       return ['client-admin', 'user'].includes(this.role)
     },
   },
@@ -49,7 +50,7 @@ const userSchema = new Schema({
     // the client of this app, e.g. 'eden-ads', 'online-marketing-wizards'
     type: String,
     lowercase: true,
-    required: function () {
+    required: function (this: IUserDocument) {
       return this.role === 'root'
     },
   },
@@ -66,7 +67,7 @@ const userSchema = new Schema({
 //   }
 // });
 
-userSchema.methods.isValidPassword = async function (submittedPassword) {
+userSchema.methods.isValidPassword = async function (submittedPassword: string) {
   return this.passwordHash === submittedPassword
   // try {
   //   return await bcrypt.compare(submittedPassword, this.passwordHash);
@@ -76,7 +77,7 @@ userSchema.methods.isValidPassword = async function (submittedPassword) {
 }
 
 // Create a model
-const User = mongoose.model('user', userSchema)
+const User = mongoose.model<IUserDocument>('user', userSchema)
 
 // const rootUser = {
 //   email: 'scottschaef@gmail.com',
@@ -98,4 +99,4 @@ const User = mongoose.model('user', userSchema)
 // const newUserCollection = [rootUser, tenantAdminUser]
 // User.create(newUserCollection)
 
-module.exports = User
+export default User

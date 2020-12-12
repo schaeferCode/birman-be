@@ -14,7 +14,7 @@ module.exports = {
     try {
       const token = verifyBearer(req.headers.authorization)
       const payload = await JWT.verify(token, process.env.JWT_SECRET)
-      req.payload = payload
+      res.locals.payload = payload
       next()
     } catch (error) {
       res.status(401).send({ error })
@@ -22,8 +22,8 @@ module.exports = {
   },
 
   verifyRole: (validRole) => {
-    return async (req, res, next) => {
-      const { role } = req.payload
+    return async (_req, res, next) => {
+      const { role } = res.locals.payload
       let rolesAsString
       if (Array.isArray(validRole)) {
         rolesAsString = validRole.join('s and ')

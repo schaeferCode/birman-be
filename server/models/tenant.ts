@@ -1,4 +1,7 @@
-const mongoose = require('mongoose')
+import mongoose from 'mongoose'
+
+import { ITenantDocument } from '../types/index'
+
 const Schema = mongoose.Schema
 
 const AD_SERVICES_LIST = ['google', 'facebook']
@@ -110,7 +113,7 @@ const tenantSchema = new Schema({
 })
 
 // Create a model
-const Tenant = mongoose.model('tenant', tenantSchema)
+const Tenant = mongoose.model<ITenantDocument>('tenant', tenantSchema)
 
 // const newTenant = {
 //   key: 'john-smith-test-manager-acct',
@@ -118,4 +121,4 @@ const Tenant = mongoose.model('tenant', tenantSchema)
 // }
 // Tenant.create(newTenant)
 
-module.exports = Tenant
+export default Tenant

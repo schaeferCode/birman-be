@@ -1,17 +1,20 @@
 "use strict";
-var express = require('express');
-var morgan = require('morgan');
-var mongoose = require('mongoose');
-var cors = require('cors');
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
+Object.defineProperty(exports, "__esModule", { value: true });
+var express_1 = __importDefault(require("express"));
+var mongoose_1 = __importDefault(require("mongoose"));
+var cors_1 = __importDefault(require("cors"));
 // const bizSdk = require('facebook-nodejs-business-sdk');
 if (process.env.NODE_ENV === 'test') {
     // TODO: Create unit tests
-    mongoose.connect('mongodb://localhost/APIAuthenticationTEST', { useNewUrlParser: true, useUnifiedTopology: true });
-    mongoose.set('useCreateIndex', true);
+    mongoose_1.default.connect('mongodb://localhost/APIAuthenticationTEST', { useNewUrlParser: true, useUnifiedTopology: true });
+    mongoose_1.default.set('useCreateIndex', true);
 }
 else {
     var uri = "mongodb+srv://" + process.env.MONGO_USER + ":" + process.env.MONGO_PASS + "@cluster0.kcgmt.mongodb.net/" + process.env.MONGO_DB_NAME + "?retryWrites=true&w=majority";
-    mongoose
+    mongoose_1.default
         .connect(uri, { useNewUrlParser: true, useUnifiedTopology: true, useCreateIndex: true })
         .then(function () {
         console.log('DB connection successful');
@@ -20,13 +23,13 @@ else {
         console.log({ err: err });
     });
 }
-var app = express();
-app.use(cors()); // TODO: Add whitelisted domains/ports
+var app = express_1.default();
+app.use(cors_1.default()); // TODO: Add whitelisted domains/ports
 // Middleware
 if (process.env.NODE_ENV !== 'test') {
-    app.use(morgan('dev'));
+    app.use(require('morgan')('dev'));
 }
-app.use(express.json());
+app.use(express_1.default.json());
 // Routes
 app.use('/auth', require('./routes/auth'));
 app.use('/users', require('./routes/users'));

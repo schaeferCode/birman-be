@@ -49,7 +49,7 @@ module.exports = {
                 switch (_c.label) {
                     case 0:
                         _a = req.value.body, email = _a.email, familyName = _a.familyName, givenName = _a.givenName, role = _a.role;
-                        _b = req.payload, clientKey = _b.clientKey, tenantKey = _b.tenantKey;
+                        _b = res.locals.payload, clientKey = _b.clientKey, tenantKey = _b.tenantKey;
                         return [4 /*yield*/, User.findOne({ email: email }).lean()];
                     case 1:
                         foundUser = _c.sent();
@@ -63,7 +63,7 @@ module.exports = {
                             givenName: givenName,
                             passwordHash: generator.generate(),
                             role: role,
-                            tenantKey: tenantKey
+                            tenantKey: tenantKey,
                         };
                         User.create(newUser);
                         res.sendStatus(200);
@@ -77,7 +77,7 @@ module.exports = {
                 switch (_c.label) {
                     case 0:
                         _a = req.value.body, email = _a.email, familyName = _a.familyName, givenName = _a.givenName, role = _a.role;
-                        _b = req.payload, clientKey = _b.clientKey, tenantKey = _b.tenantKey;
+                        _b = res.locals.payload, clientKey = _b.clientKey, tenantKey = _b.tenantKey;
                         return [4 /*yield*/, User.findOne({ email: email }).lean()];
                     case 1:
                         foundUser = _c.sent();
@@ -91,7 +91,7 @@ module.exports = {
                             givenName: givenName,
                             passwordHash: generator.generate(),
                             role: role,
-                            tenantKey: tenantKey
+                            tenantKey: tenantKey,
                         };
                         User.create(newUser);
                         res.sendStatus(200);
@@ -104,7 +104,7 @@ module.exports = {
             return __generator(this, function (_a) {
                 switch (_a.label) {
                     case 0:
-                        clientKey = req.payload.clientKey;
+                        clientKey = res.locals.payload.clientKey;
                         _a.label = 1;
                     case 1:
                         _a.trys.push([1, 3, , 4]);
@@ -123,7 +123,7 @@ module.exports = {
                     case 4: return [2 /*return*/];
                 }
             });
-        }); }
+        }); },
     },
     asTenantAdmin: {
         createClientAdmin: function (req, res) { return __awaiter(void 0, void 0, void 0, function () {
@@ -132,7 +132,7 @@ module.exports = {
                 switch (_b.label) {
                     case 0:
                         _a = req.value.body, clientName = _a.clientName, email = _a.email, familyName = _a.familyName, givenName = _a.givenName, role = _a.role, serviceUserId = _a.serviceUserId;
-                        tenantKey = req.payload.tenantKey;
+                        tenantKey = res.locals.payload.tenantKey;
                         clientKey = convertToKey(clientName);
                         return [4 /*yield*/, User.findOne({ email: email }).lean()];
                     case 1:
@@ -147,7 +147,7 @@ module.exports = {
                             givenName: givenName,
                             passwordHash: generator.generate(),
                             role: role,
-                            tenantKey: tenantKey
+                            tenantKey: tenantKey,
                         };
                         User.create(newUser);
                         return [4 /*yield*/, Tenant.findOne({ key: tenantKey }).exec()];
@@ -157,12 +157,14 @@ module.exports = {
                         if (!foundClient) {
                             newClient = {
                                 key: clientKey,
-                                linkedAdServices: [{
+                                linkedAdServices: [
+                                    {
                                         name: 'google',
                                         serviceUserId: serviceUserId,
-                                        active: true
-                                    }],
-                                name: clientName
+                                        active: true,
+                                    },
+                                ],
+                                name: clientName,
                             };
                             entity.clients.push(newClient);
                             entity.save();
@@ -178,7 +180,7 @@ module.exports = {
                 switch (_b.label) {
                     case 0:
                         _a = req.value.body, email = _a.email, familyName = _a.familyName, givenName = _a.givenName, role = _a.role;
-                        tenantKey = req.payload.tenantKey;
+                        tenantKey = res.locals.payload.tenantKey;
                         return [4 /*yield*/, User.findOne({ email: email }).lean()];
                     case 1:
                         foundUser = _b.sent();
@@ -191,7 +193,7 @@ module.exports = {
                             givenName: givenName,
                             passwordHash: generator.generate(),
                             role: role,
-                            tenantKey: tenantKey
+                            tenantKey: tenantKey,
                         };
                         User.create(newUser);
                         res.sendStatus(200);
@@ -204,7 +206,7 @@ module.exports = {
             return __generator(this, function (_a) {
                 switch (_a.label) {
                     case 0:
-                        tenantKey = req.payload.tenantKey;
+                        tenantKey = res.locals.payload.tenantKey;
                         _a.label = 1;
                     case 1:
                         _a.trys.push([1, 3, , 4]);
@@ -223,7 +225,7 @@ module.exports = {
                     case 4: return [2 /*return*/];
                 }
             });
-        }); }
+        }); },
     },
     deleteUser: function (req, res) { return __awaiter(void 0, void 0, void 0, function () {
         var _id, error_3;
@@ -273,7 +275,7 @@ module.exports = {
         return __generator(this, function (_a) {
             switch (_a.label) {
                 case 0:
-                    tenantKey = req.payload.tenantKey;
+                    tenantKey = res.locals.payload.tenantKey;
                     users = req.value.body.users;
                     return [4 /*yield*/, Tenant.findOne({ key: tenantKey }).exec()
                         // iterate through submitted userList and create new users and new clients
@@ -289,7 +291,7 @@ module.exports = {
                             givenName: givenName,
                             passwordHash: generator.generate(),
                             role: 'client-admin',
-                            tenantKey: tenantKey
+                            tenantKey: tenantKey,
                         });
                         return usersList;
                     }, []);
@@ -297,12 +299,14 @@ module.exports = {
                         var clientName = _a.clientName;
                         var newDbClient = {
                             key: convertToKey(clientName),
-                            linkedAdServices: [{
+                            linkedAdServices: [
+                                {
                                     name: 'google',
                                     serviceUserId: userId,
-                                    active: true
-                                }],
-                            name: clientName
+                                    active: true,
+                                },
+                            ],
+                            name: clientName,
                         };
                         updatedEntity.clients.push(newDbClient);
                         return updatedEntity;
@@ -317,5 +321,5 @@ module.exports = {
                     return [2 /*return*/];
             }
         });
-    }); }
+    }); },
 };

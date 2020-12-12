@@ -42,18 +42,19 @@ var ROLES = ['tenant-admin', 'client-admin', 'user', 'root'];
 var userSchema = new Schema({
     dateCreated: {
         type: Date,
-        default: Date.now
+        default: Date.now,
     },
     dateUpdated: {
         type: Date,
-        default: Date.now
+        default: Date.now,
     },
     clientKey: {
+        // if role is 'user' or 'client-admin', this is the company they work for, e.g. 'ez-dental'
         type: String,
         lowercase: true,
         required: function () {
             return ['client-admin', 'user'].includes(this.role);
-        }
+        },
     },
     email: {
         type: String,
@@ -72,7 +73,7 @@ var userSchema = new Schema({
     },
     passwordHash: {
         type: String,
-        required: true
+        required: true,
     },
     role: {
         type: String,
@@ -80,12 +81,13 @@ var userSchema = new Schema({
         required: true,
     },
     tenantKey: {
+        // the client of this app, e.g. 'eden-ads', 'online-marketing-wizards'
         type: String,
         lowercase: true,
         required: function () {
             return this.role === 'root';
-        }
-    }
+        },
+    },
 });
 // TODO: re-enable after user things are stable...
 // userSchema.pre('save', async function (next) {

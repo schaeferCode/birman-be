@@ -11,7 +11,7 @@ module.exports = {
   asClientAdmin: {
     createClientAdmin: async (req, res) => {
       const { email, familyName, givenName, role } = req.value.body
-      const { clientKey, tenantKey } = req.payload
+      const { clientKey, tenantKey } = res.locals.payload
 
       // check if account already exists
       const foundUser = await User.findOne({ email }).lean()
@@ -35,7 +35,7 @@ module.exports = {
 
     createClientUser: async (req, res) => {
       const { email, familyName, givenName, role } = req.value.body
-      const { clientKey, tenantKey } = req.payload
+      const { clientKey, tenantKey } = res.locals.payload
 
       // check if account already exists
       const foundUser = await User.findOne({ email }).lean()
@@ -58,7 +58,7 @@ module.exports = {
     },
 
     getUsers: async (req, res) => {
-      const { clientKey } = req.payload
+      const { clientKey } = res.locals.payload
 
       try {
         const users = await User.find({ clientKey }).lean()
@@ -75,7 +75,7 @@ module.exports = {
   asTenantAdmin: {
     createClientAdmin: async (req, res) => {
       const { clientName, email, familyName, givenName, role, serviceUserId } = req.value.body
-      const { tenantKey } = req.payload
+      const { tenantKey } = res.locals.payload
       const clientKey = convertToKey(clientName)
 
       // check if account already exists
@@ -118,7 +118,7 @@ module.exports = {
 
     createTenantAdmin: async (req, res) => {
       const { email, familyName, givenName, role } = req.value.body
-      const { tenantKey } = req.payload
+      const { tenantKey } = res.locals.payload
 
       // check if account already exists
       const foundUser = await User.findOne({ email }).lean()
@@ -140,7 +140,7 @@ module.exports = {
     },
 
     getUsers: async (req, res) => {
-      const { tenantKey } = req.payload
+      const { tenantKey } = res.locals.payload
 
       try {
         const users = await User.find({ tenantKey }).lean()
@@ -180,7 +180,7 @@ module.exports = {
   },
 
   batchUserCreation: async (req, res) => {
-    const { tenantKey } = req.payload
+    const { tenantKey } = res.locals.payload
     const { users } = req.value.body
     // find tenant
     const entity = await Tenant.findOne({ key: tenantKey }).exec()

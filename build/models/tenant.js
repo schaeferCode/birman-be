@@ -9,6 +9,7 @@ var adServicesSchema = new Schema({
         enum: AD_SERVICES_LIST,
     },
     serviceClientId: {
+        // ID of manager account
         type: String,
     },
     // TODO: Maybe this is needed?
@@ -29,7 +30,7 @@ var adServicesSchema = new Schema({
     dateUpdated: {
         type: Date,
         default: Date.now,
-    }
+    },
 });
 var activatedAdServices = new Schema({
     name: {
@@ -38,6 +39,7 @@ var activatedAdServices = new Schema({
         required: true,
     },
     serviceUserId: {
+        // ID of client ad account
         type: String,
         required: true,
     },
@@ -48,16 +50,16 @@ var activatedAdServices = new Schema({
     dateUpdated: {
         type: Date,
         default: Date.now,
-    }
+    },
 });
 var clientSchema = new Schema({
     dateCreated: {
         type: Date,
-        default: Date.now
+        default: Date.now,
     },
     dateUpdated: {
         type: Date,
-        default: Date.now
+        default: Date.now,
     },
     key: {
         type: String,
@@ -67,12 +69,12 @@ var clientSchema = new Schema({
         unique: true,
     },
     linkedAdServices: {
-        type: [activatedAdServices]
+        type: [activatedAdServices],
     },
     name: {
         type: String,
         required: true,
-        unique: true
+        unique: true,
     },
 });
 var tenantSchema = new Schema({
@@ -80,15 +82,15 @@ var tenantSchema = new Schema({
         type: [adServicesSchema],
     },
     clients: {
-        type: [clientSchema]
+        type: [clientSchema],
     },
     dateCreated: {
         type: Date,
-        default: Date.now
+        default: Date.now,
     },
     dateUpdated: {
         type: Date,
-        default: Date.now
+        default: Date.now,
     },
     key: {
         type: String,

@@ -1,9 +1,12 @@
+import cors from 'cors'
 import express from 'express'
 import mongoose from 'mongoose'
-import cors from 'cors'
+
+import adServicesRoutes from './routes/adServices'
+import authRoutes from './routes/auth'
+import usersRoutes from './routes/users'
 
 // const bizSdk = require('facebook-nodejs-business-sdk');
-
 if (process.env.NODE_ENV === 'test') {
   // TODO: Create unit tests
   mongoose.connect('mongodb://localhost/APIAuthenticationTEST', { useNewUrlParser: true, useUnifiedTopology: true })
@@ -13,9 +16,11 @@ if (process.env.NODE_ENV === 'test') {
   mongoose
     .connect(uri, { useNewUrlParser: true, useUnifiedTopology: true, useCreateIndex: true })
     .then(() => {
+      /* eslint-disable */
       console.log('DB connection successful')
     })
-    .catch((err: any) => {
+    .catch((err) => {
+      /* eslint-disable */
       console.log({ err })
     })
 }
@@ -25,16 +30,17 @@ app.use(cors()) // TODO: Add whitelisted domains/ports
 
 // Middleware
 if (process.env.NODE_ENV !== 'test') {
+  /* eslint-disable */
   app.use(require('morgan')('dev'))
 }
 app.use(express.json())
 
 // Routes
-app.use('/auth', require('./routes/auth'))
-app.use('/users', require('./routes/users'))
-app.use('/ad-services', require('./routes/adServices'))
+app.use('/auth', authRoutes)
+app.use('/users', usersRoutes)
+app.use('/ad-services', adServicesRoutes)
 
-module.exports = app
+export default app
 
 // const accessToken = 'EAADoZAmxf8UwBAO6KhWkNopXckn25IkD5bVpogW20Fijg3FqxhrhOSUbpqDvBHWThouTiiguZAPm5W5LscBQvoFi3O2xT9qahLKwlU6mNWTtCB6PeSZCazyCRABrnkyaZBZA2mzZBSwe5mOQC5zFnAL4CqbQQJax0p8lqdRbI0vDK4vbVg0W6h6aZCjZAm1EESZAtnS9LOFf01YqZCNhyZBuQe4';
 // const accountId = 'act_869172533586115';

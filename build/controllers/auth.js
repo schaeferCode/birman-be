@@ -57,7 +57,7 @@ module.exports = {
                     _b.label = 1;
                 case 1:
                     _b.trys.push([1, 4, , 5]);
-                    return [4 /*yield*/, User.findOne({ 'email': email }).exec()
+                    return [4 /*yield*/, User.findOne({ email: email }).exec()
                         // if not, handle that
                     ];
                 case 2:
@@ -93,5 +93,5 @@ module.exports = {
             res.status(200).json({ secret: 'resource' });
             return [2 /*return*/];
         });
-    }); }
+    }); },
 };

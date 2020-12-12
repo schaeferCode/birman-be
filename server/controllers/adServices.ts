@@ -1,15 +1,18 @@
-const { AdwordsAuth, AdwordsReport, AdwordsUser } = require('node-adwords')
+import { AdwordsAuth, AdwordsReport, AdwordsUser } from 'node-adwords'
+import { Request, Response } from 'express'
 // const { GoogleAdsApi, enums } = require('google-ads-api');
-const neatCsv = require('neat-csv')
+import neatCsv from 'neat-csv'
 
-const {
-  googleGetAccessTokenFromAuthorizationCode,
-  googleGetReport,
-  googleGetRequest,
-} = require('../helpers/serviceHelpers')
-const Tenant = require('../models/tenant')
-const User = require('../models/user')
-const { convertToKey } = require('../utilities')
+import { googleGetAccessTokenFromAuthorizationCode, googleGetReport, googleGetRequest } from '../helpers/serviceHelpers'
+import Tenant from '../models/tenant'
+import User from '../models/user'
+import { convertToKey } from '../utilities'
+import {
+  IGetCustomersResponse,
+  IGetManagedCustomerServiceResponse,
+  IManagedCustomerServiceResponseEntry,
+  IClient,
+} from '../types'
 
 const ADWORDS_API_VERSION = 'v201809'
 const USER_AGENT = 'Birman'
@@ -28,22 +31,25 @@ const googleAuthInstance = new AdwordsAuth(
 //   developer_token: process.env.GOOGLE_DEV_TOKEN,
 // })
 
-module.exports = {
-  authenticateGoogleUser: async (req, res) => {
+export default {
+  authenticateGoogleUser: async (req: Request, res: Response): Promise<void> => {
     try {
       const { access_token, refresh_token, expiry_date } = await googleGetAccessTokenFromAuthorizationCode(
         googleAuthInstance,
         req.query.code,
       )
-      const { tenantKey } = JSON.parse(req.query.state)
+
+      const { tenantKey } = (typeof req.query.state === 'string' && JSON.parse(req.query.state)) || ''
 
       const entity = await Tenant.findOne({ key: tenantKey }).exec()
+      if (!entity) throw new Error('Entity not found')
+
       const adService = entity.adServices.find((adService) => adService.name === 'google') // TODO: fix hardcode
       if (adService) {
         adService.accessToken = access_token
         adService.expiryDate = expiry_date
         adService.refreshToken = refresh_token
-        await adService.save() // TODO: Cannot save on subdoc. Must use entity object.
+        await entity.save() // TODO: Cannot save on subdoc. Must use entity object.
       } else {
         const adWordsUser = new AdwordsUser({
           access_token: access_token,
@@ -56,10 +62,11 @@ module.exports = {
 
         // get manager account id (AKA serviceClientId and clientCustomerId)
         const customerService = adWordsUser.getService('CustomerService', ADWORDS_API_VERSION)
-        const userRelatedAccounts = await googleGetRequest(customerService, 'getCustomers')
+        const userRelatedAccounts: IGetCustomersResponse[] = await googleGetRequest(customerService, 'getCustomers')
         const managerAccount = userRelatedAccounts.find((account) => {
           return account.canManageClients && account.descriptiveName === entity.name
         })
+        if (!managerAccount) throw new Error('No manager account found')
 
         const newAdService = {
           accessToken: access_token,
@@ -78,12 +85,16 @@ module.exports = {
     }
   },
 
-  getAllClients: async (req, res) => {
-    const { tenantKey } = req.payload
+  getAllClients: async (req: Request, res: Response): Promise<void> => {
+    const { tenantKey } = res.locals.payload
 
     // get access and refresh tokens
     const entity = await Tenant.findOne({ key: tenantKey }).lean()
-    const { accessToken, refreshToken, serviceClientId } = entity.adServices.find(({ name }) => name === 'google')
+    if (!entity) throw new Error('Entity not found')
+
+    const adService = entity.adServices.find(({ name }) => name === 'google')
+    if (!adService) throw new Error('Unknown error occurred; cannot find adService')
+    const { accessToken, refreshToken, serviceClientId } = adService
 
     // use ManagedCustomerService to get and return all client accounts
     const adWordsUser = new AdwordsUser({
@@ -96,11 +107,15 @@ module.exports = {
       userAgent: USER_AGENT,
     })
     const managedCustomerService = adWordsUser.getService('ManagedCustomerService', ADWORDS_API_VERSION)
-    let { entries: allClients } = await googleGetRequest(managedCustomerService, 'get', {
-      serviceSelector: {
-        fields: ['TestAccount', 'AccountLabels', 'Name', 'CustomerId', 'CanManageClients'],
+    let { entries: allClients }: IGetManagedCustomerServiceResponse = await googleGetRequest(
+      managedCustomerService,
+      'get',
+      {
+        serviceSelector: {
+          fields: ['TestAccount', 'AccountLabels', 'Name', 'CustomerId', 'CanManageClients'],
+        },
       },
-    })
+    )
     allClients = allClients.filter((account) => !account.canManageClients)
 
     // mark clients that already exist in DB
@@ -114,21 +129,28 @@ module.exports = {
     res.status(200).send(allClients)
   },
 
-  getGoogleAdMetrics: async (req, res) => {
-    const { tenant, organizationName } = req.payload
+  getGoogleAdMetrics: async (req: Request, res: Response): Promise<void> => {
+    const { tenant, organizationName } = res.locals.payload
     // get refresh and access tokens from tenant
     const entity = await Tenant.findOne({ key: tenant }).lean()
-    const { refreshToken, accessToken } = entity.adServices.find((adService) => adService.name === 'google') // TODO: handle hardcode
+    if (!entity) throw new Error('Entity not found')
+
+    const adService = entity.adServices.find((adService) => adService.name === 'google') // TODO: handle hardcode
+    if (!adService) throw new Error('Unknown error occurred; cannot find adService')
+    const { refreshToken, accessToken } = adService
 
     // get serviceUserId (AKA clientCustomerId) from relative client account
-    const { linkedAdServices } = entity.clients.find((client) => client.name === organizationName)
-    const { serviceUserId } = linkedAdServices.find((adService) => adService.name === 'google') // TODO: handle hardcode
+    const client = entity.clients.find((client) => client.name === organizationName)
+    if (!client) throw new Error('Unknown error occurred; cannot find client')
+
+    const linkedAdService = client.linkedAdServices.find((linkedAdService) => linkedAdService.name === 'google') // TODO: handle hardcode
+    if (!linkedAdService) throw new Error('Unknown error occurred; cannot find client')
 
     try {
-      let adWordsReportInstance = new AdwordsReport({
+      const adWordsReportInstance = new AdwordsReport({
         access_token: accessToken,
         client_id: process.env.GOOGLE_CLIENT_ID,
-        clientCustomerId: serviceUserId,
+        clientCustomerId: linkedAdService.serviceUserId,
         client_secret: process.env.GOOGLE_CLIENT_SECRET,
         developerToken: process.env.GOOGLE_DEV_TOKEN,
         refresh_token: refreshToken,
@@ -155,15 +177,24 @@ module.exports = {
     }
   },
 
-  getSubAccounts: async (req, res) => {
-    const { tenantKey } = req.payload
+  getSubAccounts: async (req: Request, res: Response): Promise<void> => {
+    interface IModifiedSubAccount extends IManagedCustomerServiceResponseEntry, IClient {
+      active: boolean
+      email: string
+      familyName: string
+      givenName: string
+    }
+
+    const { tenantKey } = res.locals.payload
     // get all users
     const allUsers = await User.find().lean()
     // get refresh and access tokens from tenant
     const entity = await Tenant.findOne({ key: tenantKey }).lean()
-    const { refreshToken, accessToken, serviceClientId } = entity.adServices.find(
-      (adService) => adService.name === 'google',
-    ) // TODO: handle hardcode
+    if (!entity) throw new Error('Entity not found')
+
+    const adService = entity.adServices.find((adService) => adService.name === 'google') // TODO: handle hardcode
+    if (!adService) throw new Error('Unknown error occurred; cannot find adService')
+    const { refreshToken, accessToken, serviceClientId } = adService
 
     try {
       const adWordsUser = new AdwordsUser({
@@ -177,19 +208,28 @@ module.exports = {
       })
       // get all sub accounts
       const managedCustomerService = adWordsUser.getService('ManagedCustomerService', ADWORDS_API_VERSION)
-      const { entries: subAccounts } = await googleGetRequest(managedCustomerService, 'get', {
-        serviceSelector: {
-          fields: ['TestAccount', 'AccountLabels', 'Name', 'CustomerId', 'CanManageClients'],
+      const { entries: subAccounts }: IGetManagedCustomerServiceResponse = await googleGetRequest(
+        managedCustomerService,
+        'get',
+        {
+          serviceSelector: {
+            fields: ['TestAccount', 'AccountLabels', 'Name', 'CustomerId', 'CanManageClients'],
+          },
         },
-      })
-      const updatedSubAccounts = subAccounts.reduce((updatedSubAccounts, subAccount) => {
+      )
+      const updatedSubAccounts = subAccounts.reduce((updatedSubAccounts: IModifiedSubAccount[], subAccount) => {
         // filter manager accounts
         if (subAccount.canManageClients) return updatedSubAccounts
         // find subaccounts that exists as users and mark them as such
         const existingClient = entity.clients.find((client) => {
           return client.key === convertToKey(subAccount.name)
         })
-        const modifiedSubAccount = Object.assign(subAccount, existingClient, { active: !!existingClient })
+        const modifiedSubAccount = Object.assign(subAccount, existingClient, {
+          active: !!existingClient,
+          email: '',
+          familyName: '',
+          givenName: '',
+        })
         if (existingClient) {
           const existingUser = allUsers.find((user) => user.clientKey === existingClient.key)
           if (existingUser) {
@@ -211,12 +251,12 @@ module.exports = {
     }
   },
 
-  handleGoogleOauthRedirect: (req, res) => {
+  handleGoogleOauthRedirect: (req: Request, res: Response): void => {
     const URL = googleAuthInstance.oauth2Client.generateAuthUrl({
       access_type: 'offline',
       prompt: 'consent',
       scope: 'https://www.googleapis.com/auth/adwords',
-      state: JSON.stringify({ tenantKey: req.payload.tenantKey }),
+      state: JSON.stringify({ tenantKey: res.locals.payload.tenantKey }),
     })
     res.json({
       redirectUrl: URL,
