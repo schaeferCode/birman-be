@@ -7,7 +7,7 @@ import User from '../models/user'
 const signToken = (user: IUserDocument) => {
   const { clientKey, email, familyName, givenName, id, role, tenantKey } = user
   const payload = { clientKey, email, familyName, givenName, id, role, tenantKey }
-  
+
   const jwtSignOptions = {
     expiresIn: '1d',
     issuer: 'birmanAdmin',
