@@ -33,7 +33,7 @@ export interface ITenantDocument extends Document {
   name: string
 }
 
-export interface IUserDocument extends Document {
+export interface IUser {
   dateCreated?: Date
   dateUpdated?: Date
   clientKey?: string
@@ -43,6 +43,9 @@ export interface IUserDocument extends Document {
   passwordHash: string
   role: string
   tenantKey: string
+}
+
+export interface IUserDocument extends IUser, Document {
   isValidPassword: (submittedPassword: unknown) => boolean
 }
 

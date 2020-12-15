@@ -1,22 +1,25 @@
-const generator = require('generate-password')
-const _ = require('lodash/core')
+import generator from 'generate-password'
+import _ from 'lodash'
+import { Request, Response } from 'express'
 
-const Tenant = require('../models/tenant')
-const User = require('../models/user')
-const { convertToKey } = require('../utilities')
+import Tenant from '../models/tenant'
+import User from '../models/user'
+import { convertToKey } from '../utilities'
+import { IUser, ITenantDocument } from '../types'
 
 const SAFE_USER_KEYS = ['_id', 'email', 'familyName', 'givenName', 'role', 'tenantKey']
 
 module.exports = {
   asClientAdmin: {
-    createClientAdmin: async (req, res) => {
-      const { email, familyName, givenName, role } = req.value.body
+    createClientAdmin: async (req: Request, res: Response): Promise<void> => {
+      const { email, familyName, givenName, role } = res.locals.body
       const { clientKey, tenantKey } = res.locals.payload
 
       // check if account already exists
       const foundUser = await User.findOne({ email }).lean()
       if (foundUser) {
-        return res.status(403).send({ error: 'User already exists' })
+        res.status(403).send({ error: 'User already exists' })
+        return
       }
 
       const newUser = {
@@ -33,14 +36,15 @@ module.exports = {
       res.sendStatus(200)
     },
 
-    createClientUser: async (req, res) => {
-      const { email, familyName, givenName, role } = req.value.body
+    createClientUser: async (req: Request, res: Response): Promise<void> => {
+      const { email, familyName, givenName, role } = res.locals.body
       const { clientKey, tenantKey } = res.locals.payload
 
       // check if account already exists
       const foundUser = await User.findOne({ email }).lean()
       if (foundUser) {
-        return res.status(403).send({ error: 'User already exists' })
+        res.status(403).send({ error: 'User already exists' })
+        return
       }
 
       const newUser = {
@@ -57,7 +61,7 @@ module.exports = {
       res.sendStatus(200)
     },
 
-    getUsers: async (req, res) => {
+    getUsers: async (req: Request, res: Response): Promise<void> => {
       const { clientKey } = res.locals.payload
 
       try {
@@ -73,15 +77,16 @@ module.exports = {
   },
 
   asTenantAdmin: {
-    createClientAdmin: async (req, res) => {
-      const { clientName, email, familyName, givenName, role, serviceUserId } = req.value.body
+    createClientAdmin: async (req: Request, res: Response): Promise<void> => {
+      const { clientName, email, familyName, givenName, role, serviceUserId } = res.locals.body
       const { tenantKey } = res.locals.payload
       const clientKey = convertToKey(clientName)
 
       // check if account already exists
       const foundUser = await User.findOne({ email }).lean()
       if (foundUser) {
-        return res.status(403).send({ error: 'User already exists' })
+        res.status(403).send({ error: 'User already exists' })
+        return
       }
 
       const newUser = {
@@ -96,6 +101,8 @@ module.exports = {
       User.create(newUser)
 
       const entity = await Tenant.findOne({ key: tenantKey }).exec()
+      if (!entity) throw new Error('Entity not found')
+
       const foundClient = entity.clients.find((client) => client.key === clientKey)
       if (!foundClient) {
         const newClient = {
@@ -116,14 +123,15 @@ module.exports = {
       res.sendStatus(200)
     },
 
-    createTenantAdmin: async (req, res) => {
-      const { email, familyName, givenName, role } = req.value.body
+    createTenantAdmin: async (req: Request, res: Response): Promise<void> => {
+      const { email, familyName, givenName, role } = res.locals.body
       const { tenantKey } = res.locals.payload
 
       // check if account already exists
       const foundUser = await User.findOne({ email }).lean()
       if (foundUser) {
-        return res.status(403).send({ error: 'User already exists' })
+        res.status(403).send({ error: 'User already exists' })
+        return
       }
 
       const newUser = {
@@ -139,7 +147,7 @@ module.exports = {
       res.sendStatus(200)
     },
 
-    getUsers: async (req, res) => {
+    getUsers: async (req: Request, res: Response): Promise<void> => {
       const { tenantKey } = res.locals.payload
 
       try {
@@ -154,8 +162,8 @@ module.exports = {
     },
   },
 
-  deleteUser: async (req, res) => {
-    const { _id } = req.value.body
+  deleteUser: async (req: Request, res: Response): Promise<void> => {
+    const { _id } = res.locals.body
 
     try {
       await User.findByIdAndDelete(_id).exec()
@@ -165,11 +173,12 @@ module.exports = {
     }
   },
 
-  editUser: async (req, res) => {
-    const { _id, email, familyName, givenName } = req.value.body
+  editUser: async (req: Request, res: Response): Promise<void> => {
+    const { _id, email, familyName, givenName } = res.locals.body
 
     // find user in db
     const user = await User.findById(_id).exec()
+    if (!user) throw new Error('User not found')
     // update user account and save
     user.email = email
     user.familyName = familyName
@@ -179,16 +188,21 @@ module.exports = {
     res.sendStatus(200)
   },
 
-  batchUserCreation: async (req, res) => {
+  batchUserCreation: async (req: Request, res: Response): Promise<void> => {
+    interface INewUser extends IUser {
+      clientName: string
+    }
+
     const { tenantKey } = res.locals.payload
-    const { users } = req.value.body
+    const { users } = res.locals.body
     // find tenant
     const entity = await Tenant.findOne({ key: tenantKey }).exec()
+    if (!entity) throw new Error('Entity not found')
 
     // iterate through submitted userList and create new users and new clients
     const newUsersList = _.reduce(
       users,
-      (usersList, { clientName, email, familyName, givenName, tenantKey }) => {
+      (usersList: IUser[], { clientName, email, familyName, givenName, tenantKey }: INewUser) => {
         usersList.push({
           clientKey: convertToKey(clientName),
           email,
@@ -204,7 +218,7 @@ module.exports = {
     )
     const updatedTenant = _.reduce(
       users,
-      (updatedEntity, { clientName }, userId) => {
+      (updatedEntity: ITenantDocument, { clientName }: { clientName: string }, userId: string) => {
         const newDbClient = {
           key: convertToKey(clientName),
           linkedAdServices: [
