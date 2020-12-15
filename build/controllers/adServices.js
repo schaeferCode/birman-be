@@ -46,16 +46,20 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
         if (op[0] & 5) throw op[1]; return { value: op[0] ? op[1] : void 0, done: true };
     }
 };
-var _a = require('node-adwords'), AdwordsAuth = _a.AdwordsAuth, AdwordsReport = _a.AdwordsReport, AdwordsUser = _a.AdwordsUser;
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
+Object.defineProperty(exports, "__esModule", { value: true });
+var node_adwords_1 = require("node-adwords");
 // const { GoogleAdsApi, enums } = require('google-ads-api');
-var neatCsv = require('neat-csv');
-var _b = require('../helpers/serviceHelpers'), googleGetAccessTokenFromAuthorizationCode = _b.googleGetAccessTokenFromAuthorizationCode, googleGetReport = _b.googleGetReport, googleGetRequest = _b.googleGetRequest;
-var Tenant = require('../models/tenant');
-var User = require('../models/user');
-var convertToKey = require('../utilities').convertToKey;
+var neat_csv_1 = __importDefault(require("neat-csv"));
+var serviceHelpers_1 = require("../helpers/serviceHelpers");
+var tenant_1 = __importDefault(require("../models/tenant"));
+var user_1 = __importDefault(require("../models/user"));
+var utilities_1 = require("../utilities");
 var ADWORDS_API_VERSION = 'v201809';
 var USER_AGENT = 'Birman';
-var googleAuthInstance = new AdwordsAuth({
+var googleAuthInstance = new node_adwords_1.AdwordsAuth({
     client_id: process.env.GOOGLE_CLIENT_ID,
     client_secret: process.env.GOOGLE_CLIENT_SECRET,
 }, (process.env.SERVER_URL || 'http://localhost:3000') + "/ad-services/oauth/google/callback");
@@ -64,32 +68,34 @@ var googleAuthInstance = new AdwordsAuth({
 //   client_secret: process.env.GOOGLE_CLIENT_SECRET,
 //   developer_token: process.env.GOOGLE_DEV_TOKEN,
 // })
-module.exports = {
+exports.default = {
     authenticateGoogleUser: function (req, res) { return __awaiter(void 0, void 0, void 0, function () {
         var _a, access_token, refresh_token, expiry_date, tenantKey, entity_1, adService, adWordsUser, customerService, userRelatedAccounts, managerAccount, newAdService, error_1;
         return __generator(this, function (_b) {
             switch (_b.label) {
                 case 0:
                     _b.trys.push([0, 8, , 9]);
-                    return [4 /*yield*/, googleGetAccessTokenFromAuthorizationCode(googleAuthInstance, req.query.code)];
+                    return [4 /*yield*/, serviceHelpers_1.googleGetAccessTokenFromAuthorizationCode(googleAuthInstance, req.query.code)];
                 case 1:
                     _a = _b.sent(), access_token = _a.access_token, refresh_token = _a.refresh_token, expiry_date = _a.expiry_date;
-                    tenantKey = JSON.parse(req.query.state).tenantKey;
-                    return [4 /*yield*/, Tenant.findOne({ key: tenantKey }).exec()];
+                    tenantKey = ((typeof req.query.state === 'string' && JSON.parse(req.query.state)) || '').tenantKey;
+                    return [4 /*yield*/, tenant_1.default.findOne({ key: tenantKey }).exec()];
                 case 2:
                     entity_1 = _b.sent();
+                    if (!entity_1)
+                        throw new Error('Entity not found');
                     adService = entity_1.adServices.find(function (adService) { return adService.name === 'google'; }) // TODO: fix hardcode
                     ;
                     if (!adService) return [3 /*break*/, 4];
                     adService.accessToken = access_token;
                     adService.expiryDate = expiry_date;
                     adService.refreshToken = refresh_token;
-                    return [4 /*yield*/, adService.save()]; // TODO: Cannot save on subdoc. Must use entity object.
+                    return [4 /*yield*/, entity_1.save()]; // TODO: Cannot save on subdoc. Must use entity object.
                 case 3:
                     _b.sent(); // TODO: Cannot save on subdoc. Must use entity object.
                     return [3 /*break*/, 7];
                 case 4:
-                    adWordsUser = new AdwordsUser({
+                    adWordsUser = new node_adwords_1.AdwordsUser({
                         access_token: access_token,
                         client_id: process.env.GOOGLE_CLIENT_ID,
                         client_secret: process.env.GOOGLE_CLIENT_SECRET,
@@ -98,12 +104,14 @@ module.exports = {
                         userAgent: USER_AGENT,
                     });
                     customerService = adWordsUser.getService('CustomerService', ADWORDS_API_VERSION);
-                    return [4 /*yield*/, googleGetRequest(customerService, 'getCustomers')];
+                    return [4 /*yield*/, serviceHelpers_1.googleGetRequest(customerService, 'getCustomers')];
                 case 5:
                     userRelatedAccounts = _b.sent();
                     managerAccount = userRelatedAccounts.find(function (account) {
                         return account.canManageClients && account.descriptiveName === entity_1.name;
                     });
+                    if (!managerAccount)
+                        throw new Error('No manager account found');
                     newAdService = {
                         accessToken: access_token,
                         expiryDate: expiry_date,
@@ -129,19 +137,24 @@ module.exports = {
         });
     }); },
     getAllClients: function (req, res) { return __awaiter(void 0, void 0, void 0, function () {
-        var tenantKey, entity, _a, accessToken, refreshToken, serviceClientId, adWordsUser, managedCustomerService, allClients;
-        return __generator(this, function (_b) {
-            switch (_b.label) {
+        var tenantKey, entity, adService, accessToken, refreshToken, serviceClientId, adWordsUser, managedCustomerService, allClients;
+        return __generator(this, function (_a) {
+            switch (_a.label) {
                 case 0:
                     tenantKey = res.locals.payload.tenantKey;
-                    return [4 /*yield*/, Tenant.findOne({ key: tenantKey }).lean()];
+                    return [4 /*yield*/, tenant_1.default.findOne({ key: tenantKey }).lean()];
                 case 1:
-                    entity = _b.sent();
-                    _a = entity.adServices.find(function (_a) {
+                    entity = _a.sent();
+                    if (!entity)
+                        throw new Error('Entity not found');
+                    adService = entity.adServices.find(function (_a) {
                         var name = _a.name;
                         return name === 'google';
-                    }), accessToken = _a.accessToken, refreshToken = _a.refreshToken, serviceClientId = _a.serviceClientId;
-                    adWordsUser = new AdwordsUser({
+                    });
+                    if (!adService)
+                        throw new Error('Unknown error occurred; cannot find adService');
+                    accessToken = adService.accessToken, refreshToken = adService.refreshToken, serviceClientId = adService.serviceClientId;
+                    adWordsUser = new node_adwords_1.AdwordsUser({
                         access_token: accessToken,
                         client_id: process.env.GOOGLE_CLIENT_ID,
                         client_secret: process.env.GOOGLE_CLIENT_SECRET,
@@ -151,19 +164,19 @@ module.exports = {
                         userAgent: USER_AGENT,
                     });
                     managedCustomerService = adWordsUser.getService('ManagedCustomerService', ADWORDS_API_VERSION);
-                    return [4 /*yield*/, googleGetRequest(managedCustomerService, 'get', {
+                    return [4 /*yield*/, serviceHelpers_1.googleGetRequest(managedCustomerService, 'get', {
                             serviceSelector: {
                                 fields: ['TestAccount', 'AccountLabels', 'Name', 'CustomerId', 'CanManageClients'],
                             },
                         })];
                 case 2:
-                    allClients = (_b.sent()).entries;
+                    allClients = (_a.sent()).entries;
                     allClients = allClients.filter(function (account) { return !account.canManageClients; });
                     // mark clients that already exist in DB
                     allClients = allClients.map(function (account) {
                         var foundClient = entity.clients.find(function (_a) {
                             var key = _a.key;
-                            return key === convertToKey(account.name);
+                            return key === utilities_1.convertToKey(account.name);
                         });
                         if (foundClient) {
                             return __assign(__assign({}, account), { active: true });
@@ -176,26 +189,35 @@ module.exports = {
         });
     }); },
     getGoogleAdMetrics: function (req, res) { return __awaiter(void 0, void 0, void 0, function () {
-        var _a, tenant, organizationName, entity, _b, refreshToken, accessToken, linkedAdServices, serviceUserId, adWordsReportInstance, reportOptions, report, error_2;
-        return __generator(this, function (_c) {
-            switch (_c.label) {
+        var _a, tenant, organizationName, entity, adService, refreshToken, accessToken, client, linkedAdService, adWordsReportInstance, reportOptions, report, error_2;
+        return __generator(this, function (_b) {
+            switch (_b.label) {
                 case 0:
                     _a = res.locals.payload, tenant = _a.tenant, organizationName = _a.organizationName;
-                    return [4 /*yield*/, Tenant.findOne({ key: tenant }).lean()];
+                    return [4 /*yield*/, tenant_1.default.findOne({ key: tenant }).lean()];
                 case 1:
-                    entity = _c.sent();
-                    _b = entity.adServices.find(function (adService) { return adService.name === 'google'; }) // TODO: handle hardcode
-                    , refreshToken = _b.refreshToken, accessToken = _b.accessToken;
-                    linkedAdServices = entity.clients.find(function (client) { return client.name === organizationName; }).linkedAdServices;
-                    serviceUserId = linkedAdServices.find(function (adService) { return adService.name === 'google'; }) // TODO: handle hardcode
-                    .serviceUserId;
-                    _c.label = 2;
+                    entity = _b.sent();
+                    if (!entity)
+                        throw new Error('Entity not found');
+                    adService = entity.adServices.find(function (adService) { return adService.name === 'google'; }) // TODO: handle hardcode
+                    ;
+                    if (!adService)
+                        throw new Error('Unknown error occurred; cannot find adService');
+                    refreshToken = adService.refreshToken, accessToken = adService.accessToken;
+                    client = entity.clients.find(function (client) { return client.name === organizationName; });
+                    if (!client)
+                        throw new Error('Unknown error occurred; cannot find client');
+                    linkedAdService = client.linkedAdServices.find(function (linkedAdService) { return linkedAdService.name === 'google'; }) // TODO: handle hardcode
+                    ;
+                    if (!linkedAdService)
+                        throw new Error('Unknown error occurred; cannot find client');
+                    _b.label = 2;
                 case 2:
-                    _c.trys.push([2, 5, , 6]);
-                    adWordsReportInstance = new AdwordsReport({
+                    _b.trys.push([2, 5, , 6]);
+                    adWordsReportInstance = new node_adwords_1.AdwordsReport({
                         access_token: accessToken,
                         client_id: process.env.GOOGLE_CLIENT_ID,
-                        clientCustomerId: serviceUserId,
+                        clientCustomerId: linkedAdService.serviceUserId,
                         client_secret: process.env.GOOGLE_CLIENT_SECRET,
                         developerToken: process.env.GOOGLE_DEV_TOKEN,
                         refresh_token: refreshToken,
@@ -211,18 +233,18 @@ module.exports = {
                         endDate: new Date(),
                         format: 'CSV',
                     };
-                    return [4 /*yield*/, googleGetReport(adWordsReportInstance, ADWORDS_API_VERSION, reportOptions)];
+                    return [4 /*yield*/, serviceHelpers_1.googleGetReport(adWordsReportInstance, ADWORDS_API_VERSION, reportOptions)];
                 case 3:
-                    report = _c.sent();
-                    return [4 /*yield*/, neatCsv(report, {
+                    report = _b.sent();
+                    return [4 /*yield*/, neat_csv_1.default(report, {
                             skipLines: 1,
                         })];
                 case 4:
-                    report = _c.sent();
+                    report = _b.sent();
                     res.status(200).send({ report: report });
                     return [3 /*break*/, 6];
                 case 5:
-                    error_2 = _c.sent();
+                    error_2 = _b.sent();
                     console.log({ error: error_2 });
                     return [3 /*break*/, 6];
                 case 6: return [2 /*return*/];
@@ -230,25 +252,30 @@ module.exports = {
         });
     }); },
     getSubAccounts: function (req, res) { return __awaiter(void 0, void 0, void 0, function () {
-        var tenantKey, allUsers, entity, _a, refreshToken, accessToken, serviceClientId, adWordsUser, managedCustomerService, subAccounts, updatedSubAccounts, error_3;
-        return __generator(this, function (_b) {
-            switch (_b.label) {
+        var tenantKey, allUsers, entity, adService, refreshToken, accessToken, serviceClientId, adWordsUser, managedCustomerService, subAccounts, updatedSubAccounts, error_3;
+        return __generator(this, function (_a) {
+            switch (_a.label) {
                 case 0:
                     tenantKey = res.locals.payload.tenantKey;
-                    return [4 /*yield*/, User.find().lean()
+                    return [4 /*yield*/, user_1.default.find().lean()
                         // get refresh and access tokens from tenant
                     ];
                 case 1:
-                    allUsers = _b.sent();
-                    return [4 /*yield*/, Tenant.findOne({ key: tenantKey }).lean()];
+                    allUsers = _a.sent();
+                    return [4 /*yield*/, tenant_1.default.findOne({ key: tenantKey }).lean()];
                 case 2:
-                    entity = _b.sent();
-                    _a = entity.adServices.find(function (adService) { return adService.name === 'google'; }) // TODO: handle hardcode
-                    , refreshToken = _a.refreshToken, accessToken = _a.accessToken, serviceClientId = _a.serviceClientId;
-                    _b.label = 3;
+                    entity = _a.sent();
+                    if (!entity)
+                        throw new Error('Entity not found');
+                    adService = entity.adServices.find(function (adService) { return adService.name === 'google'; }) // TODO: handle hardcode
+                    ;
+                    if (!adService)
+                        throw new Error('Unknown error occurred; cannot find adService');
+                    refreshToken = adService.refreshToken, accessToken = adService.accessToken, serviceClientId = adService.serviceClientId;
+                    _a.label = 3;
                 case 3:
-                    _b.trys.push([3, 5, , 6]);
-                    adWordsUser = new AdwordsUser({
+                    _a.trys.push([3, 5, , 6]);
+                    adWordsUser = new node_adwords_1.AdwordsUser({
                         access_token: accessToken,
                         client_id: process.env.GOOGLE_CLIENT_ID,
                         client_secret: process.env.GOOGLE_CLIENT_SECRET,
@@ -258,22 +285,27 @@ module.exports = {
                         userAgent: USER_AGENT,
                     });
                     managedCustomerService = adWordsUser.getService('ManagedCustomerService', ADWORDS_API_VERSION);
-                    return [4 /*yield*/, googleGetRequest(managedCustomerService, 'get', {
+                    return [4 /*yield*/, serviceHelpers_1.googleGetRequest(managedCustomerService, 'get', {
                             serviceSelector: {
                                 fields: ['TestAccount', 'AccountLabels', 'Name', 'CustomerId', 'CanManageClients'],
                             },
                         })];
                 case 4:
-                    subAccounts = (_b.sent()).entries;
+                    subAccounts = (_a.sent()).entries;
                     updatedSubAccounts = subAccounts.reduce(function (updatedSubAccounts, subAccount) {
                         // filter manager accounts
                         if (subAccount.canManageClients)
                             return updatedSubAccounts;
                         // find subaccounts that exists as users and mark them as such
                         var existingClient = entity.clients.find(function (client) {
-                            return client.key === convertToKey(subAccount.name);
+                            return client.key === utilities_1.convertToKey(subAccount.name);
                         });
-                        var modifiedSubAccount = Object.assign(subAccount, existingClient, { active: !!existingClient });
+                        var modifiedSubAccount = Object.assign(subAccount, existingClient, {
+                            active: !!existingClient,
+                            email: '',
+                            familyName: '',
+                            givenName: '',
+                        });
                         if (existingClient) {
                             var existingUser = allUsers.find(function (user) { return user.clientKey === existingClient.key; });
                             if (existingUser) {
@@ -289,7 +321,7 @@ module.exports = {
                     res.status(200).send({ subAccounts: updatedSubAccounts });
                     return [3 /*break*/, 6];
                 case 5:
-                    error_3 = _b.sent();
+                    error_3 = _a.sent();
                     console.log({ error: error_3 });
                     res
                         .status(404)

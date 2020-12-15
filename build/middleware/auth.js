@@ -68,7 +68,7 @@ module.exports = {
         });
     }); },
     verifyRole: function (validRole) {
-        return function (req, res, next) { return __awaiter(void 0, void 0, void 0, function () {
+        return function (_req, res, next) { return __awaiter(void 0, void 0, void 0, function () {
             var role, rolesAsString;
             return __generator(this, function (_a) {
                 role = res.locals.payload.role;

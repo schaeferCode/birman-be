@@ -43,6 +43,7 @@ export interface IUserDocument extends Document {
   passwordHash: string
   role: string
   tenantKey: string
+  isValidPassword: (submittedPassword: unknown) => boolean
 }
 
 export interface IGetCustomersResponse {

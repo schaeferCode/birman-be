@@ -67,7 +67,8 @@ const userSchema = new Schema({
 //   }
 // });
 
-userSchema.methods.isValidPassword = async function (submittedPassword: string) {
+userSchema.methods.isValidPassword = async function (submittedPassword: unknown) {
+  if (typeof submittedPassword !== 'string') throw new Error('Password is an invalid type')
   return this.passwordHash === submittedPassword
   // try {
   //   return await bcrypt.compare(submittedPassword, this.passwordHash);

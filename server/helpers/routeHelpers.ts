@@ -1,18 +1,16 @@
-const Joi = require('joi')
+import Joi, { Schema } from 'joi'
+import { NextFunction, Request, Response } from 'express'
 
 module.exports = {
-  validateBody: (schema) => (req, res, next) => {
+  validateBody: (schema: Schema) => (req: Request, res: Response, next: NextFunction) => {
     const result = schema.validate(req.body)
 
     if (result.error) {
       return res.status(200).json(result.error)
     }
 
-    if (!req.value) {
-      req.value = {}
-    }
     // put verified user and pass on req.value.body
-    req.value.body = result.value
+    res.locals.body = result.value
     return next()
   },
 

@@ -1,6 +1,10 @@
 "use strict";
-var mongoose = require('mongoose');
-var Schema = mongoose.Schema;
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
+Object.defineProperty(exports, "__esModule", { value: true });
+var mongoose_1 = __importDefault(require("mongoose"));
+var Schema = mongoose_1.default.Schema;
 var AD_SERVICES_LIST = ['google', 'facebook'];
 var adServicesSchema = new Schema({
     name: {
@@ -105,10 +109,10 @@ var tenantSchema = new Schema({
     },
 });
 // Create a model
-var Tenant = mongoose.model('tenant', tenantSchema);
+var Tenant = mongoose_1.default.model('tenant', tenantSchema);
 // const newTenant = {
 //   key: 'john-smith-test-manager-acct',
 //   name: 'John Smith Test Manager Acct',
 // }
 // Tenant.create(newTenant)
-module.exports = Tenant;
+exports.default = Tenant;
