@@ -167,11 +167,11 @@ export default {
         endDate: new Date(),
         format: 'CSV', //defaults to CSV
       }
-      let report = await googleGetReport(adWordsReportInstance, ADWORDS_API_VERSION, reportOptions)
-      report = await neatCsv(report, {
+      const report = await googleGetReport(adWordsReportInstance, ADWORDS_API_VERSION, reportOptions)
+      const neatReport = await neatCsv(report, {
         skipLines: 1,
       })
-      res.status(200).send({ report })
+      res.status(200).send({ neatReport })
     } catch (error) {
       console.log({ error })
     }
