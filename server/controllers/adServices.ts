@@ -8,16 +8,17 @@ import Tenant from '../models/tenant'
 import User from '../models/user'
 import { convertToKey } from '../utilities'
 import {
+  IClient,
   IGetCustomersResponse,
   IGetManagedCustomerServiceResponse,
+  IGoogleAuthInstance,
   IManagedCustomerServiceResponseEntry,
-  IClient,
 } from '../types'
 
 const ADWORDS_API_VERSION = 'v201809'
 const USER_AGENT = 'Birman'
 
-const googleAuthInstance = new AdwordsAuth(
+const googleAuthInstance: IGoogleAuthInstance = new AdwordsAuth(
   {
     client_id: process.env.GOOGLE_CLIENT_ID, // app id located in google dev console
     client_secret: process.env.GOOGLE_CLIENT_SECRET, // app secret located in google dev console

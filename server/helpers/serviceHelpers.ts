@@ -1,23 +1,15 @@
-type Callback = (err: null, result: string) => void
-
-interface IGoogleAuthInstance {
-  getAccessTokenFromAuthorizationCode: (code: string, callback: Callback) => void
-}
-
-interface IAdwordsReportInstance {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  getReport: (apiVersion: string, reportOptions: Record<string, any>, callback: Callback) => void
-}
-
-interface IGoogleService {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  [getCustomers: string]: (selectors: Record<string, any>, callback: Callback) => void
-}
+import {
+  IAccessTokenFromAuthorizationCodeRespose,
+  IAdwordsReportInstance,
+  IGoogleAuthInstance,
+  IGoogleService,
+} from '../types/adwordsService'
 
 export const googleGetAccessTokenFromAuthorizationCode = (
   googleAuthInstance: IGoogleAuthInstance,
-  code: string,
-): Promise<string | null> => {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  code: string | any,
+): Promise<IAccessTokenFromAuthorizationCodeRespose> => {
   return new Promise((resolve, reject) => {
     googleAuthInstance.getAccessTokenFromAuthorizationCode(code, (err, result) => {
       if (err) {
