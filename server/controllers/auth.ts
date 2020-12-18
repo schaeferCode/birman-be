@@ -17,7 +17,7 @@ const signToken = (user: IUserDocument) => {
   return JWT.sign(payload, process.env.JWT_SECRET || '', jwtSignOptions)
 }
 
-module.exports = {
+export default {
   login: async (req: Request, res: Response): Promise<void> => {
     const { email, password } = res.locals.body
 
