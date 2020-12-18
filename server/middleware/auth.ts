@@ -10,22 +10,18 @@ const verifyBearer = (authorization: string) => {
   }
 }
 
-module.exports = {
-  verify: async (req: Request, res: Response, next: NextFunction) => {
-    try {
-      const token = verifyBearer(req.headers.authorization || '')
-      if (!token) throw new Error('Auth headers sent without "Bearer"')
+export default {
+  verify: (req: Request, res: Response, next: NextFunction): void => {
+    const token = verifyBearer(req.headers.authorization || '')
+    if (!token) throw new Error('Auth headers sent without "Bearer"')
 
-      const payload = await JWT.verify(token, process.env.JWT_SECRET || '')
-      res.locals.payload = payload
-      next()
-    } catch (error) {
-      res.status(401).send({ error })
-    }
+    const payload = JWT.verify(token, process.env.JWT_SECRET || '')
+    res.locals.payload = payload
+    next()
   },
 
   verifyRole: (validRole: string[]) => {
-    return async (_req: Request, res: Response, next: NextFunction) => {
+    return (_req: Request, res: Response, next: NextFunction): void => {
       const { role } = res.locals.payload
       let rolesAsString
       if (Array.isArray(validRole)) {
@@ -34,9 +30,7 @@ module.exports = {
         rolesAsString = validRole
       }
 
-      if (!rolesAsString.includes(role)) {
-        return res.status(400).send(`This page is restricted to ${rolesAsString}s only`)
-      }
+      if (!rolesAsString.includes(role)) throw new Error('This page is restricted to ${rolesAsString}s only')
       next()
     }
   },

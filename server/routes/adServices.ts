@@ -1,7 +1,8 @@
-const router = require('express-promise-router')()
+import Router from 'express-promise-router'
+import adServicesController from '../controllers/adServices'
+import auth from '../middleware/auth'
 
-const adServicesController = require('../controllers/adServices')
-const auth = require('../middleware/auth')
+const router = Router()
 
 router
   .route('/adwords/go')
@@ -17,8 +18,6 @@ router
   .route('/get-sub-accounts')
   .get(auth.verify, auth.verifyRole(['tenant-admin', 'root']), adServicesController.getSubAccounts)
 
-router
-  .route('/get-all-clients')
-  .get(auth.verify, auth.verifyRole([['tenant-admin']]), adServicesController.getAllClients)
+router.route('/get-all-clients').get(auth.verify, auth.verifyRole(['tenant-admin']), adServicesController.getAllClients)
 
-module.exports = router
+export default router
