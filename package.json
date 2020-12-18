@@ -6,7 +6,7 @@
   },
   "version": "1.0.0",
   "description": "",
-  "main": "server/index.js",
+  "main": "server/index.ts",
   "scripts": {
     "build": "rimraf ./build && tsc",
     "dev": "nodemon",
