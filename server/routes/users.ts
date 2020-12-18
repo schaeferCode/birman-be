@@ -1,8 +1,10 @@
-const router = require('express-promise-router')()
+import Router from 'express-promise-router'
 
-const { validateBody, schemas } = require('../helpers/routeHelpers')
-const usersControllers = require('../controllers/users')
-const auth = require('../middleware/auth')
+import { validateBody, schemas } from '../helpers/routeHelpers'
+import usersControllers from '../controllers/users'
+import auth from '../middleware/auth'
+
+const router = Router()
 
 const ROLES_FOR_CLIENT_ADMIN_CREATION = ['tenant-admin', 'client-admin']
 const ROLES_FOR_TENANT_ADMIN_CREATION = ['tenant-admin', 'root']
@@ -104,4 +106,4 @@ router
     usersControllers.deleteUser,
   )
 
-module.exports = router
+export default router

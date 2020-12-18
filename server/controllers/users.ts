@@ -9,7 +9,7 @@ import { IUser, ITenantDocument } from '../types'
 
 const SAFE_USER_KEYS = ['_id', 'email', 'familyName', 'givenName', 'role', 'tenantKey']
 
-module.exports = {
+export default {
   asClientAdmin: {
     createClientAdmin: async (req: Request, res: Response): Promise<void> => {
       const { email, familyName, givenName, role } = res.locals.body
