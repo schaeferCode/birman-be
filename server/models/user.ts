@@ -1,24 +1,26 @@
-const mongoose = require('mongoose')
+import mongoose, { Schema } from 'mongoose'
 // const bcrypt = require('bcryptjs');
-const Schema = mongoose.Schema
+
+import { IUserDocument } from '../types'
 
 const ROLES = ['tenant-admin', 'client-admin', 'user', 'root']
 
 const userSchema = new Schema({
   dateCreated: {
     type: Date,
-    default: Date.now
+    default: Date.now,
   },
   dateUpdated: {
     type: Date,
-    default: Date.now
+    default: Date.now,
   },
-  clientKey: { // if role is 'user' or 'client-admin', this is the company they work for, e.g. 'ez-dental'
+  clientKey: {
+    // if role is 'user' or 'client-admin', this is the company they work for, e.g. 'ez-dental'
     type: String,
     lowercase: true,
-    required: function () {
+    required: function (this: IUserDocument) {
       return ['client-admin', 'user'].includes(this.role)
-    }
+    },
   },
   email: {
     type: String,
@@ -37,20 +39,21 @@ const userSchema = new Schema({
   },
   passwordHash: {
     type: String,
-    required: true
+    required: true,
   },
   role: {
     type: String,
     enum: ROLES,
     required: true,
   },
-  tenantKey: { // the client of this app, e.g. 'eden-ads', 'online-marketing-wizards'
+  tenantKey: {
+    // the client of this app, e.g. 'eden-ads', 'online-marketing-wizards'
     type: String,
     lowercase: true,
-    required: function () {
+    required: function (this: IUserDocument) {
       return this.role === 'root'
-    }
-  }
+    },
+  },
 })
 
 // TODO: re-enable after user things are stable...
@@ -64,7 +67,8 @@ const userSchema = new Schema({
 //   }
 // });
 
-userSchema.methods.isValidPassword = async function (submittedPassword) {
+userSchema.methods.isValidPassword = async function (submittedPassword: unknown) {
+  if (typeof submittedPassword !== 'string') throw new Error('Password is an invalid type')
   return this.passwordHash === submittedPassword
   // try {
   //   return await bcrypt.compare(submittedPassword, this.passwordHash);
@@ -74,7 +78,7 @@ userSchema.methods.isValidPassword = async function (submittedPassword) {
 }
 
 // Create a model
-const User = mongoose.model('user', userSchema)
+const User = mongoose.model<IUserDocument>('user', userSchema)
 
 // const rootUser = {
 //   email: 'scottschaef@gmail.com',
@@ -96,4 +100,4 @@ const User = mongoose.model('user', userSchema)
 // const newUserCollection = [rootUser, tenantAdminUser]
 // User.create(newUserCollection)
 
-module.exports = User
+export default User
