@@ -12,7 +12,7 @@ if (process.env.NODE_ENV === 'test') {
   mongoose.connect('mongodb://localhost/APIAuthenticationTEST', { useNewUrlParser: true, useUnifiedTopology: true })
   mongoose.set('useCreateIndex', true)
 } else {
-  const uri = `mongodb+srv://${process.env.MONGO_USER}:${process.env.MONGO_PASS}@cluster0.kcgmt.mongodb.net/${process.env.MONGO_DB_NAME}?retryWrites=true&w=majority`
+  const uri = `mongodb+srv://${process.env['MONGO_USER']}:${process.env.MONGO_PASS}@cluster0.kcgmt.mongodb.net/${process.env.MONGO_DB_NAME}?retryWrites=true&w=majority`
   mongoose
     .connect(uri, { useNewUrlParser: true, useUnifiedTopology: true, useCreateIndex: true })
     .then(() => {
